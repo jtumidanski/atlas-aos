@@ -57,5 +57,7 @@ public class AccountProcessor {
    }
 
    public void updateLoggedInStatus(int accountId, LoginState state) {
+      DatabaseConnection.getInstance().withConnection(entityManager -> AccountAdministrator.getInstance().update(entityManager,
+            accountId, null, state.getValue()));
    }
 }

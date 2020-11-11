@@ -2,6 +2,7 @@ package com.atlas.aos.rest;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.Consumes;
@@ -69,7 +70,8 @@ public class LoginResource {
                ).build();
       }
 
-      if (checkMacBan(Arrays.asList(account.macs().split(", ")))) {
+      List<String> macs = account.macs() == null ? Collections.emptyList() : Arrays.asList(account.macs().split(", "));
+      if (checkMacBan(macs)) {
          return new ResultBuilder(Response.Status.FORBIDDEN)
                .addError(new ErrorBodyBuilder()
                      .setCode("DELETED_OR_BLOCKED")
@@ -103,8 +105,10 @@ public class LoginResource {
                .addError(new ErrorBodyBuilder().setCode("INCORRECT_PASSWORD")).build();
       }
 
+      AccountProcessor.getInstance().updateLoggedInStatus(account.id(), LoginState.LOGGED_IN);
+
       // set login state
-      return new ResultBuilder(Response.Status.OK).build();
+      return new ResultBuilder(Response.Status.NO_CONTENT).build();
    }
 
    @DELETE
