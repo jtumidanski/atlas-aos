@@ -27,7 +27,7 @@ public class AccountAttributes implements AttributeResult {
 
    private String country;
 
-   private Integer characterSlots;
+   private Short characterSlots;
 
    public String getName() {
       return name;
@@ -117,11 +117,11 @@ public class AccountAttributes implements AttributeResult {
       this.country = country;
    }
 
-   public Integer getCharacterSlots() {
+   public Short getCharacterSlots() {
       return characterSlots;
    }
 
-   public void setCharacterSlots(Integer characterSlots) {
+   public void setCharacterSlots(Short characterSlots) {
       this.characterSlots = characterSlots;
    }
 }

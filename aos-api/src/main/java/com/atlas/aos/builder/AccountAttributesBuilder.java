@@ -63,7 +63,7 @@ public class AccountAttributesBuilder extends Builder<AccountAttributes, Account
       return add(attr -> attr.setCountry(country));
    }
 
-   public AccountAttributesBuilder setCharacterSlots(Integer characterSlots) {
+   public AccountAttributesBuilder setCharacterSlots(Short characterSlots) {
       return add(attr -> attr.setCharacterSlots(characterSlots));
    }
 }

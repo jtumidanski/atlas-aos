@@ -69,7 +69,7 @@ public class Account implements Serializable {
    private Integer nxPrepaid = 0;
 
    @Column(nullable = false)
-   private Integer characterSlots = 3;
+   private Short characterSlots = 3;
 
    @Column(nullable = false)
    private Integer gender = 1;
@@ -239,11 +239,11 @@ public class Account implements Serializable {
       this.nxPrepaid = nxPrepaid;
    }
 
-   public Integer getCharacterSlots() {
+   public Short getCharacterSlots() {
       return characterSlots;
    }
 
-   public void setCharacterSlots(Integer characterSlots) {
+   public void setCharacterSlots(Short characterSlots) {
       this.characterSlots = characterSlots;
    }
 
