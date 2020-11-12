@@ -27,25 +27,29 @@ public class AccountResource {
       if (name != null) {
          AccountProcessor.getInstance().getAccountByName(name).ifPresent(accountData -> {
             resultBuilder.setStatus(Response.Status.OK);
-            resultBuilder.addData(new ResultObjectBuilder(AccountAttributes.class, accountData.id())
-                  .setAttribute(new AccountAttributesBuilder()
-                        .setName(accountData.name())
-                        .setPassword(accountData.password())
-                        .setPin(accountData.pin())
-                        .setPic(accountData.pic())
-                        .setLoggedIn(accountData.loggedIn())
-                        .setLastLogin(accountData.lastLogin())
-                        .setGender((byte) accountData.gender())
-                        .setBanned(accountData.banned())
-                        .setTos(accountData.tos())
-                        .setLanguage(accountData.language())
-                        .setCountry(accountData.country())
-                        .setCharacterSlots(accountData.characterSlots())
-                  )
-            );
+            decorateResultBuilderForAccount(resultBuilder, accountData);
          });
       }
       return resultBuilder.build();
+   }
+
+   private void decorateResultBuilderForAccount(ResultBuilder resultBuilder, com.atlas.aos.model.AccountData accountData) {
+      resultBuilder.addData(new ResultObjectBuilder(AccountAttributes.class, accountData.id())
+            .setAttribute(new AccountAttributesBuilder()
+                  .setName(accountData.name())
+                  .setPassword(accountData.password())
+                  .setPin(accountData.pin())
+                  .setPic(accountData.pic())
+                  .setLoggedIn(accountData.loggedIn())
+                  .setLastLogin(accountData.lastLogin())
+                  .setGender((byte) accountData.gender())
+                  .setBanned(accountData.banned())
+                  .setTos(accountData.tos())
+                  .setLanguage(accountData.language())
+                  .setCountry(accountData.country())
+                  .setCharacterSlots(accountData.characterSlots())
+            )
+      );
    }
 
    @GET
@@ -56,12 +60,7 @@ public class AccountResource {
       ResultBuilder resultBuilder = new ResultBuilder(Response.Status.NOT_FOUND);
       AccountProcessor.getInstance().getAccountById(accountId).ifPresent(accountData -> {
          resultBuilder.setStatus(Response.Status.OK);
-         resultBuilder.addData(new ResultObjectBuilder(AccountAttributes.class, accountId)
-               .setAttribute(new AccountAttributesBuilder()
-                     .setName(accountData.name())
-                     .setLoggedIn(accountData.loggedIn())
-               )
-         );
+         decorateResultBuilderForAccount(resultBuilder, accountData);
       });
       return resultBuilder.build();
    }
