@@ -7,7 +7,7 @@ import builder.AttributeResultBuilder;
 
 public class LoginAttributesBuilder extends RecordBuilder<LoginAttributes, LoginAttributesBuilder>
       implements AttributeResultBuilder {
-   private long sessionId;
+   private Long sessionId;
 
    private String name;
 
@@ -15,7 +15,7 @@ public class LoginAttributesBuilder extends RecordBuilder<LoginAttributes, Login
 
    private String ipAddress;
 
-   private int state;
+   private Integer state;
 
    @Override
    public LoginAttributes construct() {
@@ -27,7 +27,7 @@ public class LoginAttributesBuilder extends RecordBuilder<LoginAttributes, Login
       return this;
    }
 
-   public LoginAttributesBuilder setSessionId(long sessionId) {
+   public LoginAttributesBuilder setSessionId(Long sessionId) {
       this.sessionId = sessionId;
       return getThis();
    }
@@ -47,7 +47,7 @@ public class LoginAttributesBuilder extends RecordBuilder<LoginAttributes, Login
       return getThis();
    }
 
-   public LoginAttributesBuilder setState(int state) {
+   public LoginAttributesBuilder setState(Integer state) {
       this.state = state;
       return getThis();
    }

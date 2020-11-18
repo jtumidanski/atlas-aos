@@ -7,11 +7,11 @@ import builder.AttributeResultBuilder;
 
 public class HwidAccountAttributesBuilder extends RecordBuilder<HwidAccountAttributes, HwidAccountAttributesBuilder>
       implements AttributeResultBuilder {
-   private int accountId;
+   private Integer accountId;
 
    private String hwid;
 
-   private int relevance;
+   private Integer relevance;
 
    @Override
    public HwidAccountAttributes construct() {
@@ -23,7 +23,7 @@ public class HwidAccountAttributesBuilder extends RecordBuilder<HwidAccountAttri
       return this;
    }
 
-   public HwidAccountAttributesBuilder setAccountId(int accountId) {
+   public HwidAccountAttributesBuilder setAccountId(Integer accountId) {
       this.accountId = accountId;
       return getThis();
    }
@@ -33,7 +33,7 @@ public class HwidAccountAttributesBuilder extends RecordBuilder<HwidAccountAttri
       return getThis();
    }
 
-   public HwidAccountAttributesBuilder setRelevance(int relevance) {
+   public HwidAccountAttributesBuilder setRelevance(Integer relevance) {
       this.relevance = relevance;
       return getThis();
    }

@@ -17,21 +17,21 @@ public class AccountAttributesBuilder extends RecordBuilder<AccountAttributes, A
 
    private String pic;
 
-   private int loggedIn;
+   private Integer loggedIn;
 
    private Date lastLogin;
 
-   private byte gender;
+   private Byte gender;
 
-   private boolean banned;
+   private Boolean banned;
 
-   private boolean tos;
+   private Boolean tos;
 
    private String language;
 
    private String country;
 
-   private short characterSlots;
+   private Short characterSlots;
 
    @Override
    public AccountAttributes construct() {
@@ -64,7 +64,7 @@ public class AccountAttributesBuilder extends RecordBuilder<AccountAttributes, A
       return getThis();
    }
 
-   public AccountAttributesBuilder setLoggedIn(int loggedIn) {
+   public AccountAttributesBuilder setLoggedIn(Integer loggedIn) {
       this.loggedIn = loggedIn;
       return getThis();
    }
@@ -74,17 +74,17 @@ public class AccountAttributesBuilder extends RecordBuilder<AccountAttributes, A
       return getThis();
    }
 
-   public AccountAttributesBuilder setGender(byte gender) {
+   public AccountAttributesBuilder setGender(Byte gender) {
       this.gender = gender;
       return getThis();
    }
 
-   public AccountAttributesBuilder setBanned(boolean banned) {
+   public AccountAttributesBuilder setBanned(Boolean banned) {
       this.banned = banned;
       return getThis();
    }
 
-   public AccountAttributesBuilder setTos(boolean tos) {
+   public AccountAttributesBuilder setTos(Boolean tos) {
       this.tos = tos;
       return getThis();
    }
@@ -99,7 +99,7 @@ public class AccountAttributesBuilder extends RecordBuilder<AccountAttributes, A
       return getThis();
    }
 
-   public AccountAttributesBuilder setCharacterSlots(short characterSlots) {
+   public AccountAttributesBuilder setCharacterSlots(Short characterSlots) {
       this.characterSlots = characterSlots;
       return getThis();
    }
