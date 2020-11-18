@@ -12,7 +12,7 @@ public class IpBanProvider {
 
    public static Optional<Long> getIpBanCount(EntityManager entityManager, String ipAddress) {
       return new NamedQueryClient<>(entityManager, IpBan.COUNT_FOR_IP, Long.class)
-            .setParameter(IpBan.COUNT_FOR_IP, ipAddress)
+            .setParameter(IpBan.IP_ADDRESS, ipAddress)
             .element(Long::longValue);
    }
 }
