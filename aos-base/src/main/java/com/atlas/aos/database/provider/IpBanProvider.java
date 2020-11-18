@@ -1,26 +1,18 @@
 package com.atlas.aos.database.provider;
 
+import java.util.Optional;
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
-import accessor.AbstractQueryExecutor;
+import com.app.database.provider.NamedQueryClient;
+import com.atlas.aos.entity.IpBan;
 
-public class IpBanProvider extends AbstractQueryExecutor {
-   private static IpBanProvider instance;
-
-   public static IpBanProvider getInstance() {
-      if (instance == null) {
-         instance = new IpBanProvider();
-      }
-      return instance;
-   }
-
+public class IpBanProvider {
    private IpBanProvider() {
    }
 
-   public long getIpBanCount(EntityManager entityManager, String ipAddress) {
-      TypedQuery<Long> query = entityManager.createQuery("SELECT COUNT(*) FROM IpBan i WHERE :ipAddress LIKE CONCAT(i.ip, '%')", Long.class);
-      query.setParameter("ipAddress", ipAddress);
-      return getSingleWithDefault(query, 0L);
+   public static Optional<Long> getIpBanCount(EntityManager entityManager, String ipAddress) {
+      return new NamedQueryClient<>(entityManager, IpBan.COUNT_FOR_IP, Long.class)
+            .setParameter(IpBan.COUNT_FOR_IP, ipAddress)
+            .element(Long::longValue);
    }
 }

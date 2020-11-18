@@ -3,39 +3,29 @@ package com.atlas.aos.database.administrator;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import com.app.database.util.QueryAdministratorUtil;
 import com.atlas.aos.entity.IpBan;
 
-import accessor.AbstractQueryExecutor;
-
-public class IpBanAdministrator extends AbstractQueryExecutor {
-   private static IpBanAdministrator instance;
-
-   public static IpBanAdministrator getInstance() {
-      if (instance == null) {
-         instance = new IpBanAdministrator();
-      }
-      return instance;
-   }
-
+public class IpBanAdministrator {
    private IpBanAdministrator() {
    }
 
-   public void banIp(EntityManager entityManager, String ip) {
+   public static void banIp(EntityManager entityManager, String ip) {
       IpBan ipBan = new IpBan();
       ipBan.setIp(ip);
-      insert(entityManager, ip);
+      QueryAdministratorUtil.insert(entityManager, ip);
    }
 
-   public void banIp(EntityManager entityManager, String ip, int accountId) {
+   public static void banIp(EntityManager entityManager, String ip, int accountId) {
       IpBan ipBan = new IpBan();
       ipBan.setIp(ip);
       ipBan.setAid(accountId);
-      insert(entityManager, ipBan);
+      QueryAdministratorUtil.insert(entityManager, ipBan);
    }
 
-   public void removeIpBan(EntityManager entityManager, int accountId) {
+   public static void removeIpBan(EntityManager entityManager, int accountId) {
       Query query = entityManager.createQuery("DELETE FROM IpBan WHERE aid = :accountId");
       query.setParameter("accountId", accountId);
-      execute(entityManager, query);
+      QueryAdministratorUtil.execute(entityManager, query);
    }
 }

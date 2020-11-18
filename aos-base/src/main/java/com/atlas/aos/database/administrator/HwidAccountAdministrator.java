@@ -5,49 +5,40 @@ import java.util.Calendar;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import com.app.database.util.QueryAdministratorUtil;
 import com.atlas.aos.entity.HwidAccount;
 
-import accessor.AbstractQueryExecutor;
-
-public class HwidAccountAdministrator extends AbstractQueryExecutor {
-   private static HwidAccountAdministrator instance;
-
-   public static HwidAccountAdministrator getInstance() {
-      if (instance == null) {
-         instance = new HwidAccountAdministrator();
-      }
-      return instance;
-   }
-
+public class HwidAccountAdministrator {
    private HwidAccountAdministrator() {
    }
 
-   public void updateByAccountId(EntityManager entityManager, int accountId, String hwid, int relevance, Timestamp timestamp) {
+   public static void updateByAccountId(EntityManager entityManager, int accountId, String hwid, int relevance,
+                                        Timestamp timestamp) {
       Query query = entityManager.createQuery(
             "UPDATE HwidAccount SET relevance = :relevance, expiresAt = :timestamp WHERE accountId = :accountId AND hwid LIKE :hwid");
       query.setParameter("relevance", relevance);
       query.setParameter("timestamp", timestamp);
       query.setParameter("accountId", accountId);
       query.setParameter("hwid", hwid);
-      execute(entityManager, query);
+      QueryAdministratorUtil.execute(entityManager, query);
    }
 
-   public void create(EntityManager entityManager, int accountId, String hwid, Timestamp timestamp) {
+   public static void create(EntityManager entityManager, int accountId, String hwid, Timestamp timestamp) {
       HwidAccount hwidAccount = new HwidAccount();
       hwidAccount.setAccountId(accountId);
       hwidAccount.setHwid(hwid);
       hwidAccount.setExpiresAt(timestamp);
-      insert(entityManager, hwidAccount);
+      QueryAdministratorUtil.insert(entityManager, hwidAccount);
    }
 
-   public void deleteExpired(EntityManager entityManager) {
+   public static void deleteExpired(EntityManager entityManager) {
       Query query = entityManager.createQuery("DELETE FROM HwidAccount WHERE expiresAt < :timestamp");
       query.setParameter("timestamp", new Timestamp(Calendar.getInstance().getTimeInMillis()));
-      execute(entityManager, query);
+      QueryAdministratorUtil.execute(entityManager, query);
    }
 
-   public void update(EntityManager entityManager, int id, Integer relevance) {
-      update(entityManager, HwidAccount.class, id, hwidAccount -> {
+   public static void update(EntityManager entityManager, int id, Integer relevance) {
+      QueryAdministratorUtil.update(entityManager, HwidAccount.class, id, hwidAccount -> {
          if (relevance != null) {
             Timestamp nextTimestamp = new Timestamp(System.currentTimeMillis() + hwidExpirationUpdate(relevance - 1));
             if (relevance == Byte.MAX_VALUE) {
@@ -60,7 +51,7 @@ public class HwidAccountAdministrator extends AbstractQueryExecutor {
       });
    }
 
-   private long hwidExpirationUpdate(int relevance) {
+   private static long hwidExpirationUpdate(int relevance) {
       int degree = 1;
       int i = relevance;
       int subDegree;

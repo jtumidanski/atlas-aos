@@ -8,7 +8,7 @@ import com.atlas.aos.database.administrator.AccountAdministrator;
 import com.atlas.aos.database.provider.AccountProvider;
 import com.atlas.aos.model.AccountData;
 
-import database.DatabaseConnection;
+import database.Connection;
 
 public class AccountProcessor {
    private static final Object lock = new Object();
@@ -30,34 +30,30 @@ public class AccountProcessor {
    }
 
    public Optional<AccountData> getAccountByName(String name) {
-      return DatabaseConnection.getInstance()
-            .withConnectionResult(entityManager -> AccountProvider.getInstance()
-                  .getAccountsByName(entityManager, name)
-                  .stream().findFirst()
-                  .orElse(null));
+      return Connection.instance()
+            .list(entityManager -> AccountProvider.getAccountsByName(entityManager, name))
+            .stream()
+            .findFirst();
    }
 
    public AccountData createAccount(String name, String password) {
-      return DatabaseConnection.getInstance()
-            .withConnectionResult(entityManager -> AccountAdministrator.getInstance().create(entityManager, name, password))
+      return Connection.instance()
+            .element(entityManager -> AccountAdministrator.create(entityManager, name, password))
             .orElseThrow();
    }
 
    public Optional<Calendar> getTempBanCalendar(int accountId) {
-      return DatabaseConnection.getInstance()
-            .withConnectionResult(entityManager -> AccountProvider.getInstance().getTempBanCalendar(entityManager, accountId));
+      return Connection.instance()
+            .element(entityManager -> AccountProvider.getTempBanCalendar(entityManager, accountId));
    }
 
    public Optional<AccountData> getAccountById(int accountId) {
-      return DatabaseConnection.getInstance()
-            .withConnectionResult(entityManager -> AccountProvider.getInstance()
-                  .getAccountDataById(entityManager, accountId)
-                  .stream().findFirst()
-                  .orElse(null));
+      return Connection.instance()
+            .element(entityManager -> AccountProvider.getAccountDataById(entityManager, accountId));
    }
 
    public void updateLoggedInStatus(int accountId, LoginState state) {
-      DatabaseConnection.getInstance().withConnection(entityManager -> AccountAdministrator.getInstance().update(entityManager,
-            accountId, null, state.getValue()));
+      Connection.instance()
+            .with(entityManager -> AccountAdministrator.update(entityManager, accountId, null, state.getValue()));
    }
 }

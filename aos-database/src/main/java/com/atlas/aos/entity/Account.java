@@ -10,9 +10,17 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
+@NamedQueries({
+      @NamedQuery(name = Account.GET_ALL, query = "SELECT a FROM Account a"),
+      @NamedQuery(name = Account.GET_BY_NAME, query = "SELECT a FROM Account a WHERE a.name = :name"),
+      @NamedQuery(name = Account.GET_BY_ID, query = "SELECT a FROM Account a WHERE a.id = :id"),
+      @NamedQuery(name = Account.GET_TEMP_BAN, query = "SELECT a.tempBan FROM Account a WHERE a.id = :id")
+})
 @Table(name = "accounts", indexes = {
       @Index(name = "name", columnList = "name", unique = true),
       @Index(name = "ranking", columnList = "id,banned"),
@@ -21,6 +29,18 @@ import javax.persistence.Table;
 })
 public class Account implements Serializable {
    private static final long serialVersionUID = 1L;
+
+   public static final String GET_ALL = "Account.GET_ALL";
+
+   public static final String GET_BY_NAME = "Account.GET_BY_NAME";
+
+   public static final String GET_BY_ID = "Account.GET_BY_ID";
+
+   public static final String GET_TEMP_BAN = "Account.GET_TEMP_BAN";
+
+   public static final String NAME = "name";
+
+   public static final String ID = "id";
 
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)

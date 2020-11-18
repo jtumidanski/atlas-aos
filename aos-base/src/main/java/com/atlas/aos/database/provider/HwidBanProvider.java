@@ -1,26 +1,18 @@
 package com.atlas.aos.database.provider;
 
+import java.util.Optional;
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
-import accessor.AbstractQueryExecutor;
+import com.app.database.provider.NamedQueryClient;
+import com.atlas.aos.entity.HwidBan;
 
-public class HwidBanProvider extends AbstractQueryExecutor {
-   private static HwidBanProvider instance;
-
-   public static HwidBanProvider getInstance() {
-      if (instance == null) {
-         instance = new HwidBanProvider();
-      }
-      return instance;
-   }
-
+public class HwidBanProvider {
    private HwidBanProvider() {
    }
 
-   public long getHwidBanCount(EntityManager entityManager, String hwid) {
-      TypedQuery<Long> query = entityManager.createQuery("SELECT COUNT(*) FROM HwidBan h WHERE h.hwid LIKE :hwid", Long.class);
-      query.setParameter("hwid", hwid);
-      return getSingleWithDefault(query, 0L);
+   public static Optional<Long> getHwidBanCount(EntityManager entityManager, String hwid) {
+      return new NamedQueryClient<>(entityManager, HwidBan.GET_COUNT_BY_HWID, Long.class)
+            .setParameter(HwidBan.HWID, hwid)
+            .element(Long::longValue);
    }
 }

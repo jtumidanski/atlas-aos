@@ -7,14 +7,23 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
+@NamedQueries({
+      @NamedQuery(name = MacBan.COUNT_BY_MAC_LIST, query = "SELECT COUNT(m) FROM MacBan m WHERE m.mac IN :macs")
+})
 @Table(name = "macbans", indexes = {
       @Index(name = "mac_2", columnList = "mac", unique = true)
 })
 public class MacBan implements Serializable {
    private static final long serialVersionUID = 1L;
+
+   public static final String COUNT_BY_MAC_LIST = "MacBan.COUNT_BY_MAC_LIST";
+
+   public static final String MACS = "macs";
 
    @Id
    @GeneratedValue(strategy=GenerationType.IDENTITY)

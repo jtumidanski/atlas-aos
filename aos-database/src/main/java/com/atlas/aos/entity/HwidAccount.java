@@ -9,15 +9,35 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 @Entity
+@NamedQueries({
+      @NamedQuery(name = HwidAccount.GET_BY_ACCOUNT_ID, query = "SELECT a FROM HwidAccount a WHERE a.accountId = :accountId"),
+      @NamedQuery(name = HwidAccount.GET_BY_ACCOUNT_ID_AND_HWID,
+            query = "SELECT a FROM HwidAccount a WHERE a.accountId = :accountId AND a.hwid = :hwid"),
+      @NamedQuery(name = HwidAccount.GET_BY_ID, query = "SELECT a FROM HwidAccount a WHERE a.id = :id"),
+})
 @Table(name = "hwidaccounts", uniqueConstraints = {
       @UniqueConstraint(columnNames = { "accountId", "hwid" })
 })
 public class HwidAccount implements Serializable {
    private static final long serialVersionUID = 1L;
+
+   public static final String GET_BY_ID = "HwidAccount.GET_BY_ID";
+
+   public static final String GET_BY_ACCOUNT_ID = "HwidAccount.GET_BY_ACCOUNT_ID";
+
+   public static final String GET_BY_ACCOUNT_ID_AND_HWID = "HwidAccount.GET_BY_ACCOUNT_ID_AND_HWID";
+
+   public static final String ACCOUNT_ID = "accountId";
+
+   public static final String HWID = "hwid";
+
+   public static final String ID = "id";
 
    @Id
    @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,28 +1,19 @@
 package com.atlas.aos.database.provider;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
-import accessor.AbstractQueryExecutor;
+import com.app.database.provider.NamedQueryClient;
+import com.atlas.aos.entity.MacBan;
 
-public class MacBanProvider extends AbstractQueryExecutor {
-   private static MacBanProvider instance;
-
-   public static MacBanProvider getInstance() {
-      if (instance == null) {
-         instance = new MacBanProvider();
-      }
-      return instance;
-   }
-
+public class MacBanProvider {
    private MacBanProvider() {
    }
 
-   public int getMacBanCount(EntityManager entityManager, List<String> macs) {
-      TypedQuery<Long> query = entityManager.createQuery("SELECT COUNT(*) FROM MacBan m WHERE m.mac IN :macs", Long.class);
-      query.setParameter("macs", macs);
-      return getSingleWithDefault(query, 0L).intValue();
+   public static Optional<Long> getMacBanCount(EntityManager entityManager, List<String> macs) {
+      return new NamedQueryClient<>(entityManager, MacBan.COUNT_BY_MAC_LIST, Long.class)
+            .setParameter(MacBan.MACS, macs)
+            .element(Long::longValue);
    }
 }

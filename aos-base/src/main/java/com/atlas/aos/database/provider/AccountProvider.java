@@ -5,49 +5,40 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
+import com.app.database.provider.NamedQueryClient;
 import com.atlas.aos.database.transformer.AccountDataTransformer;
 import com.atlas.aos.entity.Account;
 import com.atlas.aos.model.AccountData;
 
-import accessor.AbstractQueryExecutor;
-
-public class AccountProvider extends AbstractQueryExecutor {
-   private static AccountProvider instance;
-
-   public static AccountProvider getInstance() {
-      if (instance == null) {
-         instance = new AccountProvider();
-      }
-      return instance;
-   }
-
+public class AccountProvider {
    private AccountProvider() {
    }
 
-   public List<AccountData> getAccounts(EntityManager entityManager) {
-      TypedQuery<Account> query = entityManager.createQuery("SELECT a FROM Account a", Account.class);
-      return getResultList(query, new AccountDataTransformer());
+   public static List<AccountData> getAccounts(EntityManager entityManager) {
+      return new NamedQueryClient<>(entityManager, Account.GET_ALL, Account.class)
+            .list(new AccountDataTransformer());
    }
 
-   public List<AccountData> getAccountsByName(EntityManager entityManager, String name) {
-      TypedQuery<Account> query = entityManager.createQuery("SELECT a FROM Account a WHERE a.name = :name", Account.class);
-      query.setParameter("name", name);
-      return getResultList(query, new AccountDataTransformer());
+   public static List<AccountData> getAccountsByName(EntityManager entityManager, String name) {
+      return new NamedQueryClient<>(entityManager, Account.GET_BY_NAME, Account.class)
+            .setParameter(Account.NAME, name)
+            .list(new AccountDataTransformer());
    }
 
-   public Optional<AccountData> getAccountDataById(EntityManager entityManager, int accountId) {
-      TypedQuery<Account> query = entityManager.createQuery("SELECT a FROM Account a WHERE a.id = :id", Account.class);
-      query.setParameter("id", accountId);
-      return getSingleOptional(query, new AccountDataTransformer());
+   public static Optional<AccountData> getAccountDataById(EntityManager entityManager, int accountId) {
+      return new NamedQueryClient<>(entityManager, Account.GET_BY_ID, Account.class)
+            .setParameter(Account.ID, accountId)
+            .element(new AccountDataTransformer());
    }
 
-   public Calendar getTempBanCalendar(EntityManager entityManager, int accountId) {
-      TypedQuery<Date> query = entityManager.createQuery("SELECT a.tempBan FROM Account a WHERE a.id = :id", Date.class);
-      query.setParameter("id", accountId);
-      Calendar tempBan = Calendar.getInstance();
-      tempBan.setTimeInMillis(query.getSingleResult().getTime());
-      return tempBan;
+   public static Optional<Calendar> getTempBanCalendar(EntityManager entityManager, int accountId) {
+      return new NamedQueryClient<>(entityManager, Account.GET_TEMP_BAN, Date.class)
+            .setParameter(Account.ID, accountId)
+            .element(date -> {
+               Calendar tempBan = Calendar.getInstance();
+               tempBan.setTimeInMillis(date.getTime());
+               return tempBan;
+            });
    }
 }

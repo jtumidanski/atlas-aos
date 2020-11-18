@@ -2,17 +2,15 @@ package com.atlas.aos.processor;
 
 import javax.ws.rs.core.Response;
 
+import com.app.rest.util.stream.Collectors;
+import com.app.rest.util.stream.Mappers;
 import com.atlas.aos.attribute.HwidAccountAttributes;
-import com.atlas.aos.builder.HwidAccountAttributesBuilder;
-import com.atlas.aos.database.administrator.AccountAdministrator;
 import com.atlas.aos.database.administrator.HwidAccountAdministrator;
-import com.atlas.aos.database.provider.AccountProvider;
 import com.atlas.aos.database.provider.HwidAccountProvider;
-import com.atlas.aos.model.HwidAccountData;
+import com.atlas.aos.rest.ResultObjectFactory;
 
 import builder.ResultBuilder;
-import builder.ResultObjectBuilder;
-import database.DatabaseConnection;
+import database.Connection;
 
 public class HwidAccountProcessor {
    private static final Object lock = new Object();
@@ -33,48 +31,39 @@ public class HwidAccountProcessor {
       return result;
    }
 
-   public ResultBuilder getAll(Integer accountId, String hwid) {
-      ResultBuilder resultBuilder = new ResultBuilder(Response.Status.NOT_IMPLEMENTED);
-      if (accountId != null) {
-         if (hwid != null) {
-            DatabaseConnection.getInstance().withConnection(entityManager ->
-                  HwidAccountProvider.getInstance().getHwids(entityManager, accountId, hwid)
-                        .map(this::produceResult)
-                        .ifPresent(result -> {
-                           resultBuilder.setStatus(Response.Status.OK);
-                           resultBuilder.addData(result);
-                        }));
-         } else {
-            DatabaseConnection.getInstance().withConnection(entityManager ->
-                  HwidAccountProvider.getInstance().getHwids(entityManager, accountId).stream()
-                        .map(this::produceResult)
-                        .forEach(result -> {
-                           resultBuilder.setStatus(Response.Status.OK);
-                           resultBuilder.addData(result);
-                        }));
-         }
-      }
-      return resultBuilder;
+   public ResultBuilder getByAccountIdAndHwid(int accountId, String hwid) {
+      return Connection.instance()
+            .element(entityManager -> HwidAccountProvider.getHwids(entityManager, accountId, hwid))
+            .map(ResultObjectFactory::create)
+            .map(Mappers::singleResult)
+            .orElse(new ResultBuilder());
    }
 
-   protected ResultObjectBuilder produceResult(HwidAccountData data) {
-      return new ResultObjectBuilder(HwidAccountAttributes.class, data.id())
-            .setAttribute(new HwidAccountAttributesBuilder()
-                  .setAccountId(data.accountId())
-                  .setHwid(data.hwid())
-                  .setRelevance(data.relevance())
-            );
+   public ResultBuilder getByAccountId(int accountId) {
+      return Connection.instance()
+            .list(entityManager -> HwidAccountProvider.getHwids(entityManager, accountId))
+            .stream()
+            .map(ResultObjectFactory::create)
+            .collect(Collectors.toResultBuilder());
+   }
+
+   public ResultBuilder getAll(Integer accountId, String hwid) {
+      if (accountId != null) {
+         if (hwid != null) {
+            return getByAccountIdAndHwid(accountId, hwid);
+         } else {
+            return getByAccountId(accountId);
+         }
+      }
+      return new ResultBuilder(Response.Status.NOT_IMPLEMENTED);
    }
 
    public ResultBuilder update(Integer id, HwidAccountAttributes attributes) {
       ResultBuilder resultBuilder = new ResultBuilder(Response.Status.NOT_FOUND);
-
-      DatabaseConnection.getInstance().withConnection(entityManager ->
-            HwidAccountProvider.getInstance().getById(entityManager, id).ifPresent(data -> {
-                     resultBuilder.setStatus(Response.Status.OK);
-                        HwidAccountAdministrator.getInstance().update(entityManager, id, attributes.relevance());
-                  }
-            ));
+      Connection.instance().with(entityManager -> {
+         resultBuilder.setStatus(Response.Status.OK);
+         HwidAccountAdministrator.update(entityManager, id, attributes.relevance());
+      });
       return resultBuilder;
    }
 }

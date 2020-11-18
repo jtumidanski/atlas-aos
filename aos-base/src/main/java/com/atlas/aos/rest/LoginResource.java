@@ -14,18 +14,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.atlas.aos.ConfigConstants;
 import com.atlas.aos.LoginState;
 import com.atlas.aos.attribute.LoginAttributes;
 import com.atlas.aos.database.provider.IpBanProvider;
 import com.atlas.aos.database.provider.MacBanProvider;
 import com.atlas.aos.model.AccountData;
 import com.atlas.aos.processor.AccountProcessor;
+import com.atlas.aos.processor.ConfigurationProcessor;
 import org.mindrot.jbcrypt.BCrypt;
 
 import builder.ErrorBodyBuilder;
 import builder.ResultBuilder;
-import database.DatabaseConnection;
+import database.Connection;
 import rest.InputBody;
 
 @Path("logins")
@@ -44,7 +44,7 @@ public class LoginResource {
       Optional<AccountData> result = AccountProcessor.getInstance().getAccountByName(accountName);
       AccountData account;
       if (result.isEmpty()) {
-         if (ConfigConstants.AUTOMATIC_REGISTER) {
+         if (ConfigurationProcessor.getInstance().getConfiguration().automaticRegister) {
             String password = BCrypt.hashpw(inputBody.attribute(LoginAttributes::password), BCrypt.gensalt(12));
             account = AccountProcessor.getInstance().createAccount(accountName, password);
          } else {
@@ -121,14 +121,15 @@ public class LoginResource {
    }
 
    protected boolean checkMacBan(List<String> macs) {
-      return DatabaseConnection.getInstance().withConnectionResult(connection ->
-            MacBanProvider.getInstance().getMacBanCount(connection, macs)).orElse(0) > 1;
+      return Connection.instance()
+            .element(entityManager -> MacBanProvider.getMacBanCount(entityManager, macs))
+            .orElse(0L) > 0;
    }
 
    protected boolean checkIpBan(String ipAddress) {
-      return DatabaseConnection.getInstance()
-            .withConnectionResult(connection -> IpBanProvider.getInstance()
-                  .getIpBanCount(connection, ipAddress)).orElse(0L) > 0;
+      return Connection.instance()
+            .element(entityManager -> IpBanProvider.getIpBanCount(entityManager, ipAddress))
+            .orElse(0L) > 0;
    }
 
    protected int getSessionAttempts(long sessionId) {
