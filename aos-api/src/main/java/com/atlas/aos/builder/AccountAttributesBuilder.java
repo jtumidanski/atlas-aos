@@ -1,40 +1,42 @@
 package com.atlas.aos.builder;
 
-import builder.AttributeResultBuilder;
-import builder.RecordBuilder;
-import com.atlas.aos.attribute.AccountAttributes;
-
 import java.util.Date;
 
-public class AccountAttributesBuilder extends RecordBuilder<AccountAttributes, AccountAttributesBuilder> implements AttributeResultBuilder {
-   private static final String NAME = "NAME";
+import com.app.common.builder.RecordBuilder;
+import com.atlas.aos.attribute.AccountAttributes;
 
-   private static final String PASSWORD = "PASSWORD";
+import builder.AttributeResultBuilder;
 
-   private static final String PIN = "PIN";
+public class AccountAttributesBuilder extends RecordBuilder<AccountAttributes, AccountAttributesBuilder>
+      implements AttributeResultBuilder {
+   private String name;
 
-   private static final String PIC = "PIC";
+   private String password;
 
-   private static final String LOGGED_IN = "LOGGED_IN";
+   private String pin;
 
-   private static final String LAST_LOGIN = "LAST_LOGIN";
+   private String pic;
 
-   private static final String GENDER = "GENDER";
+   private int loggedIn;
 
-   private static final String BANNED = "BANNED";
+   private Date lastLogin;
 
-   private static final String TOS = "TOS";
+   private byte gender;
 
-   private static final String LANGUAGE = "LANGUAGE";
+   private boolean banned;
 
-   private static final String COUNTRY = "COUNTRY";
+   private boolean tos;
 
-   private static final String CHARACTER_SLOTS = "CHARACTER_SLOTS";
+   private String language;
 
+   private String country;
+
+   private short characterSlots;
 
    @Override
    public AccountAttributes construct() {
-      return new AccountAttributes(get(NAME), get(PASSWORD), get(PIN), get(PIC), get(LOGGED_IN), get(LAST_LOGIN), get(GENDER), get(BANNED), get(TOS), get(LANGUAGE), get(COUNTRY), get(CHARACTER_SLOTS));
+      return new AccountAttributes(name, password, pin, pic, loggedIn, lastLogin, gender, banned, tos, language, country,
+            characterSlots);
    }
 
    @Override
@@ -43,51 +45,62 @@ public class AccountAttributesBuilder extends RecordBuilder<AccountAttributes, A
    }
 
    public AccountAttributesBuilder setName(String name) {
-      return set(NAME, name);
+      this.name = name;
+      return getThis();
    }
 
    public AccountAttributesBuilder setPassword(String password) {
-      return set(PASSWORD, password);
+      this.password = password;
+      return getThis();
    }
 
    public AccountAttributesBuilder setPin(String pin) {
-      return set(PIN, pin);
+      this.pin = pin;
+      return getThis();
    }
 
    public AccountAttributesBuilder setPic(String pic) {
-      return set(PIC, pic);
+      this.pic = pic;
+      return getThis();
    }
 
    public AccountAttributesBuilder setLoggedIn(int loggedIn) {
-      return set(LOGGED_IN, loggedIn);
+      this.loggedIn = loggedIn;
+      return getThis();
    }
 
    public AccountAttributesBuilder setLastLogin(Date lastLogin) {
-      return set(LAST_LOGIN, lastLogin);
+      this.lastLogin = lastLogin;
+      return getThis();
    }
 
    public AccountAttributesBuilder setGender(byte gender) {
-      return set(GENDER, gender);
+      this.gender = gender;
+      return getThis();
    }
 
    public AccountAttributesBuilder setBanned(boolean banned) {
-      return set(BANNED, banned);
+      this.banned = banned;
+      return getThis();
    }
 
    public AccountAttributesBuilder setTos(boolean tos) {
-      return set(TOS, tos);
+      this.tos = tos;
+      return getThis();
    }
 
    public AccountAttributesBuilder setLanguage(String language) {
-      return set(LANGUAGE, language);
+      this.language = language;
+      return getThis();
    }
 
    public AccountAttributesBuilder setCountry(String country) {
-      return set(COUNTRY, country);
+      this.country = country;
+      return getThis();
    }
 
    public AccountAttributesBuilder setCharacterSlots(short characterSlots) {
-      return set(CHARACTER_SLOTS, characterSlots);
+      this.characterSlots = characterSlots;
+      return getThis();
    }
-
 }

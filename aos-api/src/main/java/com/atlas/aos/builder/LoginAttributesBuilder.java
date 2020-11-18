@@ -1,24 +1,25 @@
 package com.atlas.aos.builder;
 
-import builder.AttributeResultBuilder;
-import builder.RecordBuilder;
+import com.app.common.builder.RecordBuilder;
 import com.atlas.aos.attribute.LoginAttributes;
 
-public class LoginAttributesBuilder extends RecordBuilder<LoginAttributes, LoginAttributesBuilder> implements AttributeResultBuilder {
-   private static final String SESSION_ID = "SESSION_ID";
+import builder.AttributeResultBuilder;
 
-   private static final String NAME = "NAME";
+public class LoginAttributesBuilder extends RecordBuilder<LoginAttributes, LoginAttributesBuilder>
+      implements AttributeResultBuilder {
+   private long sessionId;
 
-   private static final String PASSWORD = "PASSWORD";
+   private String name;
 
-   private static final String IP_ADDRESS = "IP_ADDRESS";
+   private String password;
 
-   private static final String STATE = "STATE";
+   private String ipAddress;
 
+   private int state;
 
    @Override
    public LoginAttributes construct() {
-      return new LoginAttributes(get(SESSION_ID), get(NAME), get(PASSWORD), get(IP_ADDRESS), get(STATE));
+      return new LoginAttributes(sessionId, name, password, ipAddress, state);
    }
 
    @Override
@@ -27,23 +28,27 @@ public class LoginAttributesBuilder extends RecordBuilder<LoginAttributes, Login
    }
 
    public LoginAttributesBuilder setSessionId(long sessionId) {
-      return set(SESSION_ID, sessionId);
+      this.sessionId = sessionId;
+      return getThis();
    }
 
    public LoginAttributesBuilder setName(String name) {
-      return set(NAME, name);
+      this.name = name;
+      return getThis();
    }
 
    public LoginAttributesBuilder setPassword(String password) {
-      return set(PASSWORD, password);
+      this.password = password;
+      return getThis();
    }
 
    public LoginAttributesBuilder setIpAddress(String ipAddress) {
-      return set(IP_ADDRESS, ipAddress);
+      this.ipAddress = ipAddress;
+      return getThis();
    }
 
    public LoginAttributesBuilder setState(int state) {
-      return set(STATE, state);
+      this.state = state;
+      return getThis();
    }
-
 }
