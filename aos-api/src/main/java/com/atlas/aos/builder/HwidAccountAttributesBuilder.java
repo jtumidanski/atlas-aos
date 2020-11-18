@@ -1,15 +1,20 @@
 package com.atlas.aos.builder;
 
+import builder.AttributeResultBuilder;
+import builder.RecordBuilder;
 import com.atlas.aos.attribute.HwidAccountAttributes;
 
-import builder.AttributeResultBuilder;
-import builder.Builder;
+public class HwidAccountAttributesBuilder extends RecordBuilder<HwidAccountAttributes, HwidAccountAttributesBuilder> implements AttributeResultBuilder {
+   private static final String ACCOUNT_ID = "ACCOUNT_ID";
 
-public class HwidAccountAttributesBuilder extends Builder<HwidAccountAttributes, HwidAccountAttributesBuilder>
-      implements AttributeResultBuilder {
+   private static final String HWID = "HWID";
+
+   private static final String RELEVANCE = "RELEVANCE";
+
+
    @Override
    public HwidAccountAttributes construct() {
-      return new HwidAccountAttributes();
+      return new HwidAccountAttributes(get(ACCOUNT_ID), get(HWID), get(RELEVANCE));
    }
 
    @Override
@@ -17,15 +22,16 @@ public class HwidAccountAttributesBuilder extends Builder<HwidAccountAttributes,
       return this;
    }
 
-   public HwidAccountAttributesBuilder setAccountId(Integer accountId) {
-      return add(attr -> attr.setAccountId(accountId));
+   public HwidAccountAttributesBuilder setAccountId(int accountId) {
+      return set(ACCOUNT_ID, accountId);
    }
 
    public HwidAccountAttributesBuilder setHwid(String hwid) {
-      return add(attr -> attr.setHwid(hwid));
+      return set(HWID, hwid);
    }
 
-   public HwidAccountAttributesBuilder setRelevance(Integer relevance) {
-      return add(attr -> attr.setRelevance(relevance));
+   public HwidAccountAttributesBuilder setRelevance(int relevance) {
+      return set(RELEVANCE, relevance);
    }
+
 }

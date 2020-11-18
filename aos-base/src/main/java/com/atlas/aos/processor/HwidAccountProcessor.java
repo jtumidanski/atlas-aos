@@ -72,7 +72,7 @@ public class HwidAccountProcessor {
       DatabaseConnection.getInstance().withConnection(entityManager ->
             HwidAccountProvider.getInstance().getById(entityManager, id).ifPresent(data -> {
                      resultBuilder.setStatus(Response.Status.OK);
-                        HwidAccountAdministrator.getInstance().update(entityManager, id, attributes.getRelevance());
+                        HwidAccountAdministrator.getInstance().update(entityManager, id, attributes.relevance());
                   }
             ));
       return resultBuilder;

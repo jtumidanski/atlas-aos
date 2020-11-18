@@ -36,16 +36,16 @@ public class LoginResource {
    @Consumes(MediaType.APPLICATION_JSON)
    @Produces(MediaType.APPLICATION_JSON)
    public Response loginToAccount(InputBody<LoginAttributes> inputBody) {
-      if (getSessionAttempts(inputBody.attributes().getSessionId()) > 4) {
+      if (getSessionAttempts(inputBody.attributes().sessionId()) > 4) {
          return new ResultBuilder(Response.Status.FORBIDDEN)
                .addError(new ErrorBodyBuilder().setCode("TOO_MANY_ATTEMPTS")).build();
       }
-      String accountName = inputBody.attribute(LoginAttributes::getName);
+      String accountName = inputBody.attribute(LoginAttributes::name);
       Optional<AccountData> result = AccountProcessor.getInstance().getAccountByName(accountName);
       AccountData account;
       if (result.isEmpty()) {
          if (ConfigConstants.AUTOMATIC_REGISTER) {
-            String password = BCrypt.hashpw(inputBody.attribute(LoginAttributes::getPassword), BCrypt.gensalt(12));
+            String password = BCrypt.hashpw(inputBody.attribute(LoginAttributes::password), BCrypt.gensalt(12));
             account = AccountProcessor.getInstance().createAccount(accountName, password);
          } else {
             return new ResultBuilder(Response.Status.FORBIDDEN)
@@ -63,7 +63,7 @@ public class LoginResource {
                ).build();
       }
 
-      if (checkIpBan(inputBody.attribute(LoginAttributes::getIpAddress))) {
+      if (checkIpBan(inputBody.attribute(LoginAttributes::ipAddress))) {
          return new ResultBuilder(Response.Status.FORBIDDEN)
                .addError(new ErrorBodyBuilder()
                      .setCode("DELETED_OR_BLOCKED")
@@ -95,7 +95,7 @@ public class LoginResource {
          return new ResultBuilder(Response.Status.FORBIDDEN)
                .addError(new ErrorBodyBuilder().setCode("ALREADY_LOGGED_IN")).build();
       } else if (passwordHash.charAt(0) == '$' && passwordHash.charAt(1) == '2' &&
-            BCrypt.checkpw(inputBody.attribute(LoginAttributes::getPassword), passwordHash)) {
+            BCrypt.checkpw(inputBody.attribute(LoginAttributes::password), passwordHash)) {
          if (tos) {
             return new ResultBuilder(Response.Status.FORBIDDEN)
                   .addError(new ErrorBodyBuilder().setCode("LICENSE_AGREEMENT")).build();
