@@ -146,14 +146,14 @@ public class LoginResource {
       AccountData account = result.get();
       LoginState state = LoginState.from(account.loggedIn()).orElseThrow();
 
-      if (state == LoginState.SERVER_TRANSISTION) {
+      if (state == LoginState.SERVER_TRANSITION) {
          if (account.lastLogin().getTime() + 30000 < System.currentTimeMillis()) {
             state = LoginState.NOT_LOGGED_IN;
             updateLoginState(accountId, state);
          }
       }
 
-      if (state == LoginState.SERVER_TRANSISTION) {
+      if (state == LoginState.SERVER_TRANSITION) {
          AccountProcessor.getInstance().updateLoggedInStatus(accountId, state);
       }
 
