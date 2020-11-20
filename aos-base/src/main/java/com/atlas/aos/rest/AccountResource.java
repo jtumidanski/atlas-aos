@@ -26,7 +26,7 @@ public class AccountResource {
          resultBuilder = AccountProcessor.getInstance()
                .getAccountByName(name)
                .map(ResultObjectFactory::create)
-               .map(Mappers::singleResult)
+               .map(Mappers::singleOkResult)
                .orElse(new ResultBuilder(Response.Status.NOT_FOUND));
       }
       return resultBuilder.build();
@@ -40,7 +40,7 @@ public class AccountResource {
       ResultBuilder resultBuilder = AccountProcessor.getInstance()
             .getAccountById(accountId)
             .map(ResultObjectFactory::create)
-            .map(Mappers::singleResult)
+            .map(Mappers::singleOkResult)
             .orElse(new ResultBuilder(Response.Status.NOT_FOUND));
       return resultBuilder.build();
    }
