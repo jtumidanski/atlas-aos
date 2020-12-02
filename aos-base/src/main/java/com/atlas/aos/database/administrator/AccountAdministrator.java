@@ -23,6 +23,9 @@ public class AccountAdministrator {
       update(entityManager, accountId, account -> {
          QueryAdministratorUtil.setIfNotNull(password, account::setPassword);
          QueryAdministratorUtil.setIfNotNull(loggedIn, account::setLoggedIn);
+         if (loggedIn > 0) {
+            account.setLastLogin(new Timestamp(System.currentTimeMillis()));
+         }
       });
    }
 
