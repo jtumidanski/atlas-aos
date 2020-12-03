@@ -63,6 +63,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>app-core</groupId>
+            <artifactId>app-kafka</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>atlas</groupId>
             <artifactId>shared-rest</artifactId>
             <version>1.0-SNAPSHOT</version>
@@ -80,6 +85,11 @@
         <dependency>
             <groupId>atlas</groupId>
             <artifactId>aos-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>atlas</groupId>
+            <artifactId>csrv-api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
