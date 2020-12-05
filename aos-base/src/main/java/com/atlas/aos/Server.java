@@ -3,9 +3,9 @@ package com.atlas.aos;
 import java.net.URI;
 import java.util.concurrent.Executors;
 
-import com.atlas.aos.event.consumer.CharacterLoggedInConsumer;
+import com.atlas.aos.event.consumer.CharacterStatusConsumer;
 import com.atlas.csrv.constant.EventConstants;
-import com.atlas.csrv.event.CharacterLoggedInEvent;
+import com.atlas.csrv.event.CharacterStatusEvent;
 import com.atlas.kafka.consumer.ConsumerBuilder;
 import com.atlas.shared.rest.RestServerFactory;
 import com.atlas.shared.rest.RestService;
@@ -21,10 +21,10 @@ public class Server {
       RestServerFactory.create(uri, "com.atlas.aos.rest");
 
       Executors.newSingleThreadExecutor().execute(
-            new ConsumerBuilder<>("Account Service", CharacterLoggedInEvent.class)
+            new ConsumerBuilder<>("Account Service", CharacterStatusEvent.class)
                   .setBootstrapServers(System.getenv("BOOTSTRAP_SERVERS"))
-                  .setTopic(System.getenv(EventConstants.TOPIC_CHARACTER_LOGIN))
-                  .setHandler(new CharacterLoggedInConsumer())
+                  .setTopic(System.getenv(EventConstants.TOPIC_CHARACTER_STATUS))
+                  .setHandler(new CharacterStatusConsumer())
                   .build()
       );
    }
