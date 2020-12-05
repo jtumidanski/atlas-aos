@@ -1,4 +1,4 @@
-package com.atlas.aos;
+package com.atlas.aos.model;
 
 import java.util.Optional;
 

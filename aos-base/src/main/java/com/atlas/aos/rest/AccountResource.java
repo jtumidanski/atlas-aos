@@ -1,18 +1,10 @@
 package com.atlas.aos.rest;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import com.atlas.aos.rest.processor.AccountRequestProcessor;
+
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import com.app.rest.util.stream.Mappers;
-import com.atlas.aos.processor.AccountProcessor;
-
-import builder.ResultBuilder;
 
 @Path("accounts")
 public class AccountResource {
@@ -21,15 +13,7 @@ public class AccountResource {
    @Consumes(MediaType.APPLICATION_JSON)
    @Produces(MediaType.APPLICATION_JSON)
    public Response getAccount(@QueryParam("name") String name) {
-      ResultBuilder resultBuilder = new ResultBuilder(Response.Status.NOT_FOUND);
-      if (name != null) {
-         resultBuilder = AccountProcessor.getInstance()
-               .getAccountByName(name)
-               .map(ResultObjectFactory::create)
-               .map(Mappers::singleOkResult)
-               .orElse(new ResultBuilder(Response.Status.NOT_FOUND));
-      }
-      return resultBuilder.build();
+      return AccountRequestProcessor.getAccounts(name).build();
    }
 
    @GET
@@ -37,11 +21,6 @@ public class AccountResource {
    @Consumes(MediaType.APPLICATION_JSON)
    @Produces(MediaType.APPLICATION_JSON)
    public Response getAccount(@PathParam("accountId") Integer accountId) {
-      ResultBuilder resultBuilder = AccountProcessor.getInstance()
-            .getAccountById(accountId)
-            .map(ResultObjectFactory::create)
-            .map(Mappers::singleOkResult)
-            .orElse(new ResultBuilder(Response.Status.NOT_FOUND));
-      return resultBuilder.build();
+      return AccountRequestProcessor.getAccount(accountId).build();
    }
 }

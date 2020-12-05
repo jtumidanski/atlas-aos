@@ -12,34 +12,19 @@ import com.atlas.aos.rest.ResultObjectFactory;
 import builder.ResultBuilder;
 import database.Connection;
 
-public class HwidAccountProcessor {
-   private static final Object lock = new Object();
-
-   private static volatile HwidAccountProcessor instance;
-
-   public static HwidAccountProcessor getInstance() {
-      HwidAccountProcessor result = instance;
-      if (result == null) {
-         synchronized (lock) {
-            result = instance;
-            if (result == null) {
-               result = new HwidAccountProcessor();
-               instance = result;
-            }
-         }
-      }
-      return result;
+public final class HwidAccountProcessor {
+   private HwidAccountProcessor() {
    }
 
-   public ResultBuilder getByAccountIdAndHwid(int accountId, String hwid) {
+   public static ResultBuilder getByAccountIdAndHwid(int accountId, String hwid) {
       return Connection.instance()
             .element(entityManager -> HwidAccountProvider.getHwids(entityManager, accountId, hwid))
             .map(ResultObjectFactory::create)
-            .map(Mappers::singleResult)
+            .map(Mappers::singleOkResult)
             .orElse(new ResultBuilder());
    }
 
-   public ResultBuilder getByAccountId(int accountId) {
+   public static ResultBuilder getByAccountId(int accountId) {
       return Connection.instance()
             .list(entityManager -> HwidAccountProvider.getHwids(entityManager, accountId))
             .stream()
@@ -47,7 +32,7 @@ public class HwidAccountProcessor {
             .collect(Collectors.toResultBuilder());
    }
 
-   public ResultBuilder getAll(Integer accountId, String hwid) {
+   public static ResultBuilder getAll(Integer accountId, String hwid) {
       if (accountId != null) {
          if (hwid != null) {
             return getByAccountIdAndHwid(accountId, hwid);
@@ -58,7 +43,7 @@ public class HwidAccountProcessor {
       return new ResultBuilder(Response.Status.NOT_IMPLEMENTED);
    }
 
-   public ResultBuilder update(Integer id, HwidAccountAttributes attributes) {
+   public static ResultBuilder update(Integer id, HwidAccountAttributes attributes) {
       ResultBuilder resultBuilder = new ResultBuilder(Response.Status.NOT_FOUND);
       Connection.instance().with(entityManager -> {
          resultBuilder.setStatus(Response.Status.OK);
