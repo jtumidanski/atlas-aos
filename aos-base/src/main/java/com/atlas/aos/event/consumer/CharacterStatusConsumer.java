@@ -2,13 +2,14 @@ package com.atlas.aos.event.consumer;
 
 import com.atlas.aos.model.LoginState;
 import com.atlas.aos.processor.AccountProcessor;
+import com.atlas.aos.processor.TopicDiscoveryProcessor;
 import com.atlas.csrv.constant.EventConstants;
 import com.atlas.csrv.event.CharacterStatusEvent;
 import com.atlas.kafka.consumer.SimpleEventHandler;
 
 public class CharacterStatusConsumer implements SimpleEventHandler<CharacterStatusEvent> {
    @Override
-   public void handle(Long aLong, CharacterStatusEvent event) {
+   public void handle(Long key, CharacterStatusEvent event) {
       switch (event.type()) {
          case LOGIN -> AccountProcessor.updateLoggedInStatus(event.accountId(), LoginState.LOGGED_IN);
          case LOGOUT -> AccountProcessor.updateLoggedInStatus(event.accountId(), LoginState.NOT_LOGGED_IN);
@@ -32,6 +33,6 @@ public class CharacterStatusConsumer implements SimpleEventHandler<CharacterStat
 
    @Override
    public String getTopic() {
-      return System.getenv(EventConstants.TOPIC_CHARACTER_STATUS);
+      return TopicDiscoveryProcessor.getTopic(EventConstants.TOPIC_CHARACTER_STATUS);
    }
 }
