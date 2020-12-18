@@ -21,7 +21,7 @@ public final class HwidAccountProcessor {
             .element(entityManager -> HwidAccountProvider.getHwids(entityManager, accountId, hwid))
             .map(ResultObjectFactory::create)
             .map(Mappers::singleOkResult)
-            .orElse(new ResultBuilder());
+            .orElseGet(ResultBuilder::notFound);
    }
 
    public static ResultBuilder getByAccountId(int accountId) {
@@ -40,11 +40,11 @@ public final class HwidAccountProcessor {
             return getByAccountId(accountId);
          }
       }
-      return new ResultBuilder(Response.Status.NOT_IMPLEMENTED);
+      return ResultBuilder.notImplemented();
    }
 
    public static ResultBuilder update(Integer id, HwidAccountAttributes attributes) {
-      ResultBuilder resultBuilder = new ResultBuilder(Response.Status.NOT_FOUND);
+      ResultBuilder resultBuilder = ResultBuilder.notFound();
       Connection.instance().with(entityManager -> {
          resultBuilder.setStatus(Response.Status.OK);
          HwidAccountAdministrator.update(entityManager, id, attributes.relevance());

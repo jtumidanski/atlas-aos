@@ -1,7 +1,11 @@
 package com.atlas.aos.rest.processor;
 
-import builder.ErrorBodyBuilder;
-import builder.ResultBuilder;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import com.atlas.aos.ConfigurationRegistry;
 import com.atlas.aos.attribute.LoginAttributes;
 import com.atlas.aos.database.provider.IpBanProvider;
@@ -9,20 +13,19 @@ import com.atlas.aos.database.provider.MacBanProvider;
 import com.atlas.aos.model.AccountData;
 import com.atlas.aos.model.LoginState;
 import com.atlas.aos.processor.AccountProcessor;
-import database.Connection;
 import org.mindrot.jbcrypt.BCrypt;
 
-import javax.ws.rs.core.Response;
-import java.util.*;
+import builder.ErrorBodyBuilder;
+import builder.ResultBuilder;
+import database.Connection;
 
 public final class LoginRequestProcessor {
    private LoginRequestProcessor() {
    }
 
-
    public static ResultBuilder login(LoginAttributes attributes) {
       if (getSessionAttempts(attributes.sessionId()) > 4) {
-         return new ResultBuilder(Response.Status.FORBIDDEN)
+         return ResultBuilder.forbidden()
                .addError(new ErrorBodyBuilder().setCode("TOO_MANY_ATTEMPTS"));
       }
       String accountName = attributes.name();
@@ -33,7 +36,7 @@ public final class LoginRequestProcessor {
             String password = BCrypt.hashpw(attributes.password(), BCrypt.gensalt(12));
             account = AccountProcessor.createAccount(accountName, password);
          } else {
-            return new ResultBuilder(Response.Status.FORBIDDEN)
+            return ResultBuilder.forbidden()
                   .addError(new ErrorBodyBuilder().setCode("NOT_REGISTERED"));
          }
       } else {
@@ -41,7 +44,7 @@ public final class LoginRequestProcessor {
       }
 
       if (account.banned()) {
-         return new ResultBuilder(Response.Status.FORBIDDEN)
+         return ResultBuilder.forbidden()
                .addError(new ErrorBodyBuilder()
                      .setCode("DELETED_OR_BLOCKED")
                      .addMeta("reason", (byte) account.gReason())
@@ -49,7 +52,7 @@ public final class LoginRequestProcessor {
       }
 
       if (checkIpBan(attributes.ipAddress())) {
-         return new ResultBuilder(Response.Status.FORBIDDEN)
+         return ResultBuilder.forbidden()
                .addError(new ErrorBodyBuilder()
                      .setCode("DELETED_OR_BLOCKED")
                );
@@ -57,7 +60,7 @@ public final class LoginRequestProcessor {
 
       List<String> macs = account.macs() == null ? Collections.emptyList() : Arrays.asList(account.macs().split(", "));
       if (checkMacBan(macs)) {
-         return new ResultBuilder(Response.Status.FORBIDDEN)
+         return ResultBuilder.forbidden()
                .addError(new ErrorBodyBuilder()
                      .setCode("DELETED_OR_BLOCKED")
                );
@@ -65,7 +68,7 @@ public final class LoginRequestProcessor {
 
       Optional<Calendar> tempBanCalendar = AccountProcessor.getTempBanCalendar(account.id());
       if (tempBanCalendar.isPresent() && tempBanCalendar.get().getTimeInMillis() > Calendar.getInstance().getTimeInMillis()) {
-         return new ResultBuilder(Response.Status.FORBIDDEN)
+         return ResultBuilder.forbidden()
                .addError(new ErrorBodyBuilder()
                      .setCode("DELETED_OR_BLOCKED")
                      .addMeta("reason", (byte) account.gReason())
@@ -77,25 +80,24 @@ public final class LoginRequestProcessor {
       boolean tos = account.tos();
 
       if (getLoginState(account.id()) != LoginState.NOT_LOGGED_IN) {
-         return new ResultBuilder(Response.Status.FORBIDDEN)
+         return ResultBuilder.forbidden()
                .addError(new ErrorBodyBuilder().setCode("ALREADY_LOGGED_IN"));
       } else if (passwordHash.charAt(0) == '$' && passwordHash.charAt(1) == '2' &&
             BCrypt.checkpw(attributes.password(), passwordHash)) {
          if (tos) {
-            return new ResultBuilder(Response.Status.FORBIDDEN)
+            return ResultBuilder.forbidden()
                   .addError(new ErrorBodyBuilder().setCode("LICENSE_AGREEMENT"));
          }
       } else {
-         return new ResultBuilder(Response.Status.FORBIDDEN)
+         return ResultBuilder.forbidden()
                .addError(new ErrorBodyBuilder().setCode("INCORRECT_PASSWORD"));
       }
 
       AccountProcessor.updateLoggedInStatus(account.id(), LoginState.LOGGED_IN);
 
       // set login state
-      return new ResultBuilder(Response.Status.NO_CONTENT);
+      return ResultBuilder.noContent();
    }
-
 
    protected static boolean checkMacBan(List<String> macs) {
       return Connection.instance()
@@ -138,6 +140,6 @@ public final class LoginRequestProcessor {
 
    public static ResultBuilder logout(int accountId) {
       AccountProcessor.updateLoggedInStatus(accountId, LoginState.NOT_LOGGED_IN);
-      return new ResultBuilder(Response.Status.NO_CONTENT);
+      return ResultBuilder.noContent();
    }
 }

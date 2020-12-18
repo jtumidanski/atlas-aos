@@ -1,14 +1,13 @@
 package com.atlas.aos.rest.processor;
 
-import builder.ResultBuilder;
 import com.app.rest.util.stream.Mappers;
 import com.atlas.aos.processor.AccountProcessor;
 import com.atlas.aos.rest.ResultObjectFactory;
 
-import javax.ws.rs.core.Response;
+import builder.ResultBuilder;
 
 public final class AccountRequestProcessor {
-   private AccountRequestProcessor(){
+   private AccountRequestProcessor() {
    }
 
    public static ResultBuilder getAccounts(String name) {
@@ -16,15 +15,15 @@ public final class AccountRequestProcessor {
          return AccountProcessor.getAccountByName(name)
                .map(ResultObjectFactory::create)
                .map(Mappers::singleOkResult)
-               .orElse(new ResultBuilder(Response.Status.NOT_FOUND));
+               .orElseGet(ResultBuilder::notFound);
       }
-      return new ResultBuilder(Response.Status.NOT_FOUND);
+      return ResultBuilder.notFound();
    }
 
    public static ResultBuilder getAccount(int accountId) {
       return AccountProcessor.getAccountById(accountId)
             .map(ResultObjectFactory::create)
             .map(Mappers::singleOkResult)
-            .orElse(new ResultBuilder(Response.Status.NOT_FOUND));
+            .orElseGet(ResultBuilder::notFound);
    }
 }
