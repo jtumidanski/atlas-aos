@@ -16,7 +16,7 @@ COPY aos-base/src aos-base/src
 COPY aos-database/src aos-database/src
 COPY aos-model/src aos-model/src
 
-RUN mvn install
+RUN mvn install -Prunnable
 
 FROM openjdk:14-ea-jdk-alpine
 USER root
