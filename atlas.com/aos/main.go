@@ -1,30 +1,67 @@
 package main
 
 import (
-   "atlas-aos/database/account"
-   "gorm.io/driver/mysql"
-   "gorm.io/gorm"
-   "log"
-   "os"
+	"atlas-aos/database/account"
+	"atlas-aos/kafka/consumers"
+	"atlas-aos/rest"
+	"context"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-   l := log.New(os.Stdout, "aos ", log.LstdFlags|log.Lmicroseconds)
-   db, err := gorm.Open(mysql.New(mysql.Config{
-      DSN:                       "root:the@tcp(atlas-db:3306)/atlas-aos?charset=utf8&parseTime=True&loc=Local", // data source name
-      DefaultStringSize:         256,                                                                            // default size for string fields
-      DisableDatetimePrecision:  true,                                                                           // disable datetime precision, which not supported before MySQL 5.6
-      DontSupportRenameIndex:    true,                                                                           // drop & create when rename index, rename index not supported before MySQL 5.7, MariaDB
-      DontSupportRenameColumn:   true,                                                                           // `change` when rename column, rename column not supported before MySQL 8, MariaDB
-      SkipInitializeWithVersion: false,                                                                          // auto configure based on currently MySQL version
-   }), &gorm.Config{})
-   if err != nil {
-      panic("failed to connect database")
-   }
+	l := log.New(os.Stdout, "aos ", log.LstdFlags|log.Lmicroseconds)
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:                       "root:the@tcp(atlas-db:3306)/atlas-aos?charset=utf8&parseTime=True&loc=Local",
+		DefaultStringSize:         256,
+		DisableDatetimePrecision:  true,
+		DontSupportRenameIndex:    true,
+		DontSupportRenameColumn:   true,
+		SkipInitializeWithVersion: false,
+	}), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
 
-   // Migrate the schema
-   account.Migration(db)
+	// Migrate the schema
+	account.Migration(db)
 
-   a := account.CreateAccount(db, "Justin", "Durr")
-   l.Printf("Created account %d for %s with password %s.", a.Id(), a.Name(), a.Password())
+	createEventConsumers(l, db)
+	createRestService(l, db)
+
+	// trap sigterm or interrupt and gracefully shutdown the server
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	// Block until a signal is received.
+	sig := <-c
+	l.Println("[INFO] shutting down via signal:", sig)
+}
+
+func createEventConsumers(l *log.Logger, db *gorm.DB) {
+	cec := func(topicToken string, emptyEventCreator consumers.EmptyEventCreator, processor consumers.EventProcessor) {
+		createEventConsumer(l, topicToken, emptyEventCreator, processor)
+	}
+	cec("TOPIC_CHARACTER_STATUS", consumers.CharacterStatusEventCreator(), consumers.HandleCharacterStatusEvent(db))
+}
+
+func createEventConsumer(l *log.Logger, topicToken string, emptyEventCreator consumers.EmptyEventCreator, processor consumers.EventProcessor) {
+	h := func(logger *log.Logger, event interface{}) {
+		processor(logger, event)
+	}
+
+	c := consumers.NewConsumer(l, context.Background(), h,
+		consumers.SetGroupId("Account Orchestration Service"),
+		consumers.SetTopicToken(topicToken),
+		consumers.SetEmptyEventCreator(emptyEventCreator))
+	go c.Init()
+}
+
+func createRestService(l *log.Logger, db *gorm.DB) {
+	rs := rest.NewServer(l, db)
+	go rs.Run()
 }

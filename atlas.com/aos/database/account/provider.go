@@ -5,20 +5,25 @@ import (
    "gorm.io/gorm"
 )
 
-func GetByName(db *gorm.DB, name string) []domain.Account {
+func GetByName(db *gorm.DB, name string) []*domain.Account {
    var results []account
-   db.Where(&account{Name: name}).First(&results)
+   err := db.Where(&account{Name: name}).First(&results).Error
+   if err != nil {
+      return make([]*domain.Account, 0)
+   }
 
-   var accounts []domain.Account
+   var accounts []*domain.Account
    for _, a := range results {
       accounts = append(accounts, makeAccount(&a))
    }
    return accounts
 }
 
-func GetById(db *gorm.DB, id uint32) domain.Account {
+func GetById(db *gorm.DB, id uint32) (*domain.Account, error) {
    var result account
-   db.First(&result, id)
-
-   return makeAccount(&result)
+   err := db.First(&result, id).Error
+   if err != nil {
+      return nil, err
+   }
+   return makeAccount(&result), nil
 }
