@@ -4,6 +4,7 @@ import (
 	"atlas-aos/database/account"
 	"atlas-aos/kafka/consumers"
 	"atlas-aos/rest"
+	"atlas-aos/retry"
 	"context"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -13,8 +14,7 @@ import (
 	"syscall"
 )
 
-func main() {
-	l := log.New(os.Stdout, "aos ", log.LstdFlags|log.Lmicroseconds)
+func connectToDatabase(attempt int) (bool, interface{}, error) {
 	db, err := gorm.Open(mysql.New(mysql.Config{
 		DSN:                       "root:the@tcp(atlas-db:3306)/atlas-aos?charset=utf8&parseTime=True&loc=Local",
 		DefaultStringSize:         256,
@@ -24,8 +24,18 @@ func main() {
 		SkipInitializeWithVersion: false,
 	}), &gorm.Config{})
 	if err != nil {
+		return true, nil, err
+	}
+	return false, db, err
+}
+
+func main() {
+	l := log.New(os.Stdout, "aos ", log.LstdFlags|log.Lmicroseconds)
+	r, err := retry.RetryResponse(connectToDatabase, 10)
+	if err != nil {
 		panic("failed to connect database")
 	}
+	db := r.(*gorm.DB)
 
 	// Migrate the schema
 	account.Migration(db)
