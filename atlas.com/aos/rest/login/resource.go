@@ -37,9 +37,9 @@ func CreateLogin(l *log.Logger, db *gorm.DB) func(http.ResponseWriter, *http.Req
 		}
 
 		att := li.Data.Attributes
-		err = processors.AttemptLogin(db, att.SessionId, att.Name, att.Password)
+		err = processors.AttemptLogin(l, db, att.SessionId, att.Name, att.Password)
 		if err != nil {
-			l.Println("[WARN] login attempt by %s failed. error = %s", att.Name, err.Error())
+			l.Printf("[WARN] login attempt by %s failed. error = %s", att.Name, err.Error())
 			rw.WriteHeader(http.StatusForbidden)
 			errorData := &ErrorListDataContainer{
 				Errors: []ErrorData{

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"log"
 )
 
 func SetLoggedIn(db *gorm.DB, accountId uint32) error {
@@ -17,16 +18,17 @@ func SetLoggedOut(db *gorm.DB, accountId uint32) error {
 	return account.UpdateState(db, accountId, account.StateNotLoggedIn)
 }
 
-func AttemptLogin(db *gorm.DB, sessionId uint32, name string, password string) error {
+func AttemptLogin(l *log.Logger, db *gorm.DB, sessionId uint32, name string, password string) error {
 	if checkLoginAttempts(sessionId) > 4 {
 		return errors.New("TOO_MANY_ATTEMPTS")
 	}
 
 	var a *domain.Account
 	as := account.GetByName(db, name)
-	if as == nil {
+	if as == nil || len(as) == 0 {
 		c, err := registries.GetConfiguration()
 		if err != nil {
+			l.Printf("[ERROR] error reading needed configuration.")
 			return errors.New("SYSTEM_ERROR")
 		}
 
@@ -38,6 +40,7 @@ func AttemptLogin(db *gorm.DB, sessionId uint32, name string, password string) e
 			}
 			a, err = account.CreateAccount(db, name, string(hashPass))
 			if err != nil {
+				l.Printf("[ERROR] error creating new account for %s.", name)
 				return errors.New("SYSTEM_ERROR")
 			}
 		} else {
@@ -63,6 +66,7 @@ func AttemptLogin(db *gorm.DB, sessionId uint32, name string, password string) e
 
 	err := account.UpdateState(db, a.Id(), account.StateLoggedIn)
 	if err != nil {
+		l.Printf("[ERROR] error trying to update logged in state for %s.", name)
 		return errors.New("SYSTEM_ERROR")
 	}
 
