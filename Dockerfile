@@ -1,37 +1,28 @@
-FROM maven:3.6.3-openjdk-14-slim AS build
+# Start from a Debian image with the latest version of Go installed
+# and a workspace (GOPATH) configured at /go.
+FROM golang:alpine3.12 AS build-env
 
-COPY settings.xml /usr/share/maven/conf/
+# Copy the local package files to the container's workspace.
 
-COPY pom.xml pom.xml
-COPY aos-api/pom.xml aos-api/pom.xml
-COPY aos-base/pom.xml aos-base/pom.xml
-COPY aos-database/pom.xml aos-database/pom.xml
-COPY aos-model/pom.xml aos-model/pom.xml
+# Build the outyet command inside the container.
+# (You may fetch or manage dependencies here,
+# either manually or with a tool like "godep".)
+RUN apk add --no-cache git
 
-RUN mvn dependency:go-offline package -B
+ADD ./atlas.com/aos /atlas.com/aos
+WORKDIR /atlas.com/aos
 
-## copy the pom and src code to the container
-COPY aos-api/src aos-api/src
-COPY aos-base/src aos-base/src
-COPY aos-database/src aos-database/src
-COPY aos-model/src aos-model/src
+RUN go build -o /server
 
-RUN mvn install -Prunnable
+FROM alpine:3.12
 
-FROM openjdk:14-ea-jdk-alpine
-USER root
+# Port 8080 belongs to our application
+EXPOSE 8080
 
-RUN mkdir service
+RUN apk add --no-cache libc6-compat
 
-COPY --from=build /aos-base/target/ /service/
-COPY config.yaml /service/
+WORKDIR /
 
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.5.0/wait /wait
+COPY --from=build-env /server /
 
-RUN chmod +x /wait
-
-ENV JAVA_TOOL_OPTIONS -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-
-EXPOSE 5005
-
-CMD /wait && java --enable-preview -jar /service/aos-base-1.0-SNAPSHOT.jar -Xdebug
+CMD ["/server"]
