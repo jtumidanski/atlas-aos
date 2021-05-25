@@ -1,12 +1,12 @@
 package login
 
 import (
-	"atlas-aos/rest/json"
+	"atlas-aos/rest/response"
 )
 
 type LoginDataContainer struct {
-	data     json.DataSegment
-	included json.DataSegment
+	data     response.DataSegment
+	included response.DataSegment
 }
 
 type LoginInputContainer struct {
@@ -28,7 +28,7 @@ type LoginAttributes struct {
 }
 
 func (a *LoginDataContainer) UnmarshalJSON(data []byte) error {
-	d, i, err := json.UnmarshalRoot(data, json.MapperFunc(EmptyLoginData))
+	d, i, err := response.UnmarshalRoot(data, response.MapperFunc(EmptyLoginData))
 	if err != nil {
 		return err
 	}

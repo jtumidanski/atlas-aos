@@ -1,19 +1,20 @@
 package attributes
 
 import (
-	"atlas-aos/database/account"
-	"atlas-aos/rest/json"
+	account2 "atlas-aos/account"
+	"atlas-aos/json"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"strconv"
 )
 
-func GetAccountByName(_ *log.Logger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
+func GetAccountByName(_ logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		name := getAccountName(r)
-		as := account.GetByName(db, name)
+		as := account2.GetByName(db, name)
 		if len(as) == 0 {
 			rw.WriteHeader(http.StatusNotFound)
 			return
@@ -38,7 +39,7 @@ func GetAccountByName(_ *log.Logger, db *gorm.DB) func(http.ResponseWriter, *htt
 					TOS:            false,
 					Language:       "",
 					Country:        "",
-					CharacterSlots: 0,
+					CharacterSlots: 4,
 				},
 			},
 		}
@@ -47,10 +48,10 @@ func GetAccountByName(_ *log.Logger, db *gorm.DB) func(http.ResponseWriter, *htt
 	}
 }
 
-func GetAccountById(_ *log.Logger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
+func GetAccountById(_ logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		id := getAccountId(r)
-		a, err := account.GetById(db, id)
+		a, err := account2.GetById(db, id)
 		if err != nil {
 			rw.WriteHeader(http.StatusNotFound)
 			return
@@ -73,7 +74,7 @@ func GetAccountById(_ *log.Logger, db *gorm.DB) func(http.ResponseWriter, *http.
 					TOS:            false,
 					Language:       "",
 					Country:        "",
-					CharacterSlots: 0,
+					CharacterSlots: 4,
 				},
 			},
 		}

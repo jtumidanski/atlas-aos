@@ -1,34 +1,34 @@
 package processors
 
 import (
-	"atlas-aos/database/account"
+	account2 "atlas-aos/account"
 	"atlas-aos/domain"
 	"atlas-aos/registries"
 	"errors"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"log"
 )
 
 func SetLoggedIn(db *gorm.DB, accountId uint32) error {
-	return account.UpdateState(db, accountId, account.StateLoggedIn)
+	return account2.UpdateState(db, accountId, account2.StateLoggedIn)
 }
 
 func SetLoggedOut(db *gorm.DB, accountId uint32) error {
-	return account.UpdateState(db, accountId, account.StateNotLoggedIn)
+	return account2.UpdateState(db, accountId, account2.StateNotLoggedIn)
 }
 
-func AttemptLogin(l *log.Logger, db *gorm.DB, sessionId uint32, name string, password string) error {
+func AttemptLogin(l logrus.FieldLogger, db *gorm.DB, sessionId uint32, name string, password string) error {
 	if checkLoginAttempts(sessionId) > 4 {
 		return errors.New("TOO_MANY_ATTEMPTS")
 	}
 
 	var a *domain.Account
-	as := account.GetByName(db, name)
+	as := account2.GetByName(db, name)
 	if as == nil || len(as) == 0 {
 		c, err := registries.GetConfiguration()
 		if err != nil {
-			l.Printf("[ERROR] error reading needed configuration.")
+			l.WithError(err).Errorf("Error reading needed configuration.")
 			return errors.New("SYSTEM_ERROR")
 		}
 
@@ -38,9 +38,9 @@ func AttemptLogin(l *log.Logger, db *gorm.DB, sessionId uint32, name string, pas
 			if err != nil {
 				return err
 			}
-			a, err = account.CreateAccount(db, name, string(hashPass))
+			a, err = account2.CreateAccount(db, name, string(hashPass))
 			if err != nil {
-				l.Printf("[ERROR] error creating new account for %s.", name)
+				l.WithError(err).Errorln("Error creating new account for %s.", name)
 				return errors.New("SYSTEM_ERROR")
 			}
 		} else {
@@ -56,7 +56,7 @@ func AttemptLogin(l *log.Logger, db *gorm.DB, sessionId uint32, name string, pas
 
 	// TODO implement ip, mac, and temporary banning practices
 
-	if a.State() != account.StateNotLoggedIn {
+	if a.State() != account2.StateNotLoggedIn {
 		return errors.New("ALREADY_LOGGED_IN")
 	} else if a.Password()[0] == uint8('$') && a.Password()[1] == uint8('2') && bcrypt.CompareHashAndPassword([]byte(a.Password()), []byte(password)) == nil {
 		// TODO implement tos tracking
@@ -64,9 +64,9 @@ func AttemptLogin(l *log.Logger, db *gorm.DB, sessionId uint32, name string, pas
 		return errors.New("INCORRECT_PASSWORD")
 	}
 
-	err := account.UpdateState(db, a.Id(), account.StateLoggedIn)
+	err := account2.UpdateState(db, a.Id(), account2.StateLoggedIn)
 	if err != nil {
-		l.Printf("[ERROR] error trying to update logged in state for %s.", name)
+		l.WithError(err).Errorln("Error trying to update logged in state for %s.", name)
 		return errors.New("SYSTEM_ERROR")
 	}
 

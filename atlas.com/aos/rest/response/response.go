@@ -1,22 +1,8 @@
-package json
+package response
 
 import (
 	"encoding/json"
-	"io"
 )
-
-// ToJSON serializes the given interface into a string based JSON format
-func ToJSON(i interface{}, w io.Writer) error {
-	e := json.NewEncoder(w)
-	return e.Encode(i)
-}
-
-// FromJSON deserializes the object from JSON string
-// in an io.Reader to the given interface
-func FromJSON(i interface{}, r io.Reader) error {
-	d := json.NewDecoder(r)
-	return d.Decode(i)
-}
 
 // objectMap is a simple representation of a json map. key is a string, and value is a nested object
 type objectMap map[string]interface{}
@@ -24,9 +10,9 @@ type objectMap map[string]interface{}
 // ObjectMapper maps a objectMap to a concrete data type
 type ObjectMapper func(objectMap) interface{}
 
-// conditionalMapperProvider returns a string representing the type of object the ObjectMapper handles, as well as the
+// ConditionalMapperProvider returns a string representing the type of object the ObjectMapper handles, as well as the
 // ObjectMapper itself.
-type conditionalMapperProvider func() (string, ObjectMapper)
+type ConditionalMapperProvider func() (string, ObjectMapper)
 
 // concreteObjectProvider returns a new (empty) concrete object
 type concreteObjectProvider func() interface{}
@@ -36,7 +22,7 @@ type DataSegment []interface{}
 
 // UnmarshalRoot will take a raw byte array, and using mapper functions, produce a data DataSegment and includes
 // DataSegment representing a jsonapi.org request response
-func UnmarshalRoot(data []byte, root ObjectMapper, options ...conditionalMapperProvider) (DataSegment, DataSegment, error) {
+func UnmarshalRoot(data []byte, root ObjectMapper, options ...ConditionalMapperProvider) (DataSegment, DataSegment, error) {
 	var dataResult DataSegment
 	var includeResult DataSegment
 
@@ -65,7 +51,7 @@ func UnmarshalRoot(data []byte, root ObjectMapper, options ...conditionalMapperP
 }
 
 // includeMapper represents a ObjectMapper for handling the jsonapi.org includes data section
-func includeMapper(options ...conditionalMapperProvider) ObjectMapper {
+func includeMapper(options ...ConditionalMapperProvider) ObjectMapper {
 	return func(o objectMap) interface{} {
 		return addInclude(o, options...)
 	}
@@ -107,13 +93,13 @@ func MapperFunc(dpf concreteObjectProvider) ObjectMapper {
 	}
 }
 
-func unmarshalData(tf string, dpf concreteObjectProvider) (string, ObjectMapper) {
+func UnmarshalData(tf string, dpf concreteObjectProvider) (string, ObjectMapper) {
 	return tf, MapperFunc(dpf)
 }
 
 // addInclude processes a map structure representing the jsonapi.org data object to produce a concrete struct.
 // given a set of functions which could produce a concrete struct
-func addInclude(x objectMap, options ...conditionalMapperProvider) interface{} {
+func addInclude(x objectMap, options ...ConditionalMapperProvider) interface{} {
 	t := x["type"].(string)
 	for _, o := range options {
 		tf, mf := o()

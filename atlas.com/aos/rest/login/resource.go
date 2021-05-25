@@ -1,10 +1,10 @@
 package login
 
 import (
+	"atlas-aos/json"
 	"atlas-aos/processors"
-	"atlas-aos/rest/json"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 )
 
@@ -25,12 +25,12 @@ type ErrorData struct {
 	Meta   map[string]string `json:"meta"`
 }
 
-func CreateLogin(l *log.Logger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
+func CreateLogin(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		li := &LoginInputContainer{}
 		err := json.FromJSON(li, r.Body)
 		if err != nil {
-			l.Println("[ERROR] deserializing instruction", err)
+			l.WithError(err).Errorln("Deserializing instruction", err)
 			rw.WriteHeader(http.StatusBadRequest)
 			json.ToJSON(&GenericError{Message: err.Error()}, rw)
 			return
@@ -39,7 +39,7 @@ func CreateLogin(l *log.Logger, db *gorm.DB) func(http.ResponseWriter, *http.Req
 		att := li.Data.Attributes
 		err = processors.AttemptLogin(l, db, att.SessionId, att.Name, att.Password)
 		if err != nil {
-			l.Printf("[WARN] login attempt by %s failed. error = %s", att.Name, err.Error())
+			l.WithError(err).Warnf("Login attempt by %s failed. error = %s", att.Name, err.Error())
 			rw.WriteHeader(http.StatusForbidden)
 			errorData := &ErrorListDataContainer{
 				Errors: []ErrorData{
