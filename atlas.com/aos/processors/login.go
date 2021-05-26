@@ -2,7 +2,6 @@ package processors
 
 import (
 	account2 "atlas-aos/account"
-	"atlas-aos/domain"
 	"atlas-aos/registries"
 	"errors"
 	"github.com/sirupsen/logrus"
@@ -23,7 +22,7 @@ func AttemptLogin(l logrus.FieldLogger, db *gorm.DB, sessionId uint32, name stri
 		return errors.New("TOO_MANY_ATTEMPTS")
 	}
 
-	var a *domain.Account
+	var a *account2.Model
 	as := account2.GetByName(db, name)
 	if as == nil || len(as) == 0 {
 		c, err := registries.GetConfiguration()

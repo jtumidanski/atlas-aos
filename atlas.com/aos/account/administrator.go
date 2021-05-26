@@ -1,12 +1,11 @@
 package account
 
 import (
-	"atlas-aos/domain"
 	"gorm.io/gorm"
 	"time"
 )
 
-func CreateAccount(db *gorm.DB, name string, password string) (*domain.Account, error) {
+func CreateAccount(db *gorm.DB, name string, password string) (*Model, error) {
 	a := &account{
 		Name:      name,
 		Password:  password,
@@ -37,8 +36,8 @@ func UpdateState(db *gorm.DB, id uint32, state byte) error {
 	return err
 }
 
-func makeAccount(a *account) *domain.Account {
-	r := domain.NewAccountBuilder(a.ID).
+func makeAccount(a *account) *Model {
+	r := Builder(a.ID).
 		SetName(a.Name).
 		SetPassword(a.Password).
 		SetState(a.State).

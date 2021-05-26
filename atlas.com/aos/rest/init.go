@@ -1,7 +1,7 @@
 package rest
 
 import (
-	account2 "atlas-aos/rest/account"
+	"atlas-aos/account"
 	"atlas-aos/rest/login"
 	"context"
 	"github.com/gorilla/mux"
@@ -24,8 +24,8 @@ func ProduceRoutes(db *gorm.DB) func(l logrus.FieldLogger) http.Handler {
 		lRouter.HandleFunc("/", login.CreateLogin(l, db)).Methods(http.MethodPost)
 
 		aRouter := router.PathPrefix("/accounts").Subrouter()
-		aRouter.HandleFunc("/", account2.GetAccountByName(l, db)).Queries("name", "{name}").Methods(http.MethodGet)
-		aRouter.HandleFunc("/{accountId}", account2.GetAccountById(l, db)).Methods(http.MethodGet)
+		aRouter.HandleFunc("/", account.GetAccountByName(l, db)).Queries("name", "{name}").Methods(http.MethodGet)
+		aRouter.HandleFunc("/{accountId}", account.GetAccountById(l, db)).Methods(http.MethodGet)
 
 		return router
 	}

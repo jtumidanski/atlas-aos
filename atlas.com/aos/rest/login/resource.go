@@ -32,7 +32,10 @@ func CreateLogin(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *h
 		if err != nil {
 			l.WithError(err).Errorln("Deserializing instruction", err)
 			rw.WriteHeader(http.StatusBadRequest)
-			json.ToJSON(&GenericError{Message: err.Error()}, rw)
+			err = json.ToJSON(&GenericError{Message: err.Error()}, rw)
+			if err != nil {
+				l.WithError(err).Errorf("Writing error.")
+			}
 			return
 		}
 
@@ -53,7 +56,10 @@ func CreateLogin(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *h
 				},
 			}
 
-			json.ToJSON(errorData, rw)
+			err := json.ToJSON(errorData, rw)
+			if err != nil {
+				l.WithError(err).Errorln("Writing error.")
+			}
 			return
 		}
 
