@@ -39,7 +39,7 @@ func AttemptLogin(l logrus.FieldLogger, db *gorm.DB, sessionId uint32, name stri
 			}
 			a, err = account2.CreateAccount(db, name, string(hashPass))
 			if err != nil {
-				l.WithError(err).Errorln("Error creating new account for %s.", name)
+				l.WithError(err).Errorf("Error creating new account for %s.", name)
 				return errors.New("SYSTEM_ERROR")
 			}
 		} else {
@@ -65,7 +65,7 @@ func AttemptLogin(l logrus.FieldLogger, db *gorm.DB, sessionId uint32, name stri
 
 	err := account2.UpdateState(db, a.Id(), account2.StateLoggedIn)
 	if err != nil {
-		l.WithError(err).Errorln("Error trying to update logged in state for %s.", name)
+		l.WithError(err).Errorf("Error trying to update logged in state for %s.", name)
 		return errors.New("SYSTEM_ERROR")
 	}
 
