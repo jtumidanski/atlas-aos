@@ -1,6 +1,7 @@
 package main
 
 import (
+	"atlas-aos/account"
 	"atlas-aos/database"
 	"atlas-aos/kafka/consumers"
 	"atlas-aos/logger"
@@ -19,7 +20,7 @@ func main() {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 
-	db := database.ConnectToDatabase(l)
+	db := database.Connect(l, database.SetMigrations(account.Migration))
 
 	consumers.CreateEventConsumers(l, db, ctx, wg)
 

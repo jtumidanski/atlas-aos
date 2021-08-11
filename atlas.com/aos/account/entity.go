@@ -10,8 +10,8 @@ const (
 	StateLoggedIn          byte = 2
 )
 
-func Migration(db *gorm.DB) {
-	_ = db.AutoMigrate(&account{})
+func Migration(db *gorm.DB) error {
+	return db.AutoMigrate(&account{})
 }
 
 type account struct {
