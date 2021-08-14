@@ -4,22 +4,22 @@ import (
 	"atlas-aos/rest/response"
 )
 
-type LoginDataContainer struct {
+type DataContainer struct {
 	data     response.DataSegment
 	included response.DataSegment
 }
 
-type LoginInputContainer struct {
-	Data LoginData `json:"data"`
+type InputDataContainer struct {
+	Data DataBody `json:"data"`
 }
 
-type LoginData struct {
-	Id         string          `json:"id"`
-	Type       string          `json:"type"`
-	Attributes LoginAttributes `json:"attributes"`
+type DataBody struct {
+	Id         string     `json:"id"`
+	Type       string     `json:"type"`
+	Attributes Attributes `json:"attributes"`
 }
 
-type LoginAttributes struct {
+type Attributes struct {
 	SessionId uint32 `json:"sessionId"`
 	Name      string `json:"name"`
 	Password  string `json:"password"`
@@ -27,7 +27,7 @@ type LoginAttributes struct {
 	State     int    `json:"state"`
 }
 
-func (a *LoginDataContainer) UnmarshalJSON(data []byte) error {
+func (a *DataContainer) UnmarshalJSON(data []byte) error {
 	d, i, err := response.UnmarshalRoot(data, response.MapperFunc(EmptyLoginData))
 	if err != nil {
 		return err
@@ -38,21 +38,21 @@ func (a *LoginDataContainer) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (a *LoginDataContainer) Data() *LoginData {
+func (a *DataContainer) Data() *DataBody {
 	if len(a.data) >= 1 {
-		return a.data[0].(*LoginData)
+		return a.data[0].(*DataBody)
 	}
 	return nil
 }
 
-func (a *LoginDataContainer) DataList() []LoginData {
-	var r = make([]LoginData, 0)
+func (a *DataContainer) DataList() []DataBody {
+	var r = make([]DataBody, 0)
 	for _, x := range a.data {
-		r = append(r, *x.(*LoginData))
+		r = append(r, *x.(*DataBody))
 	}
 	return r
 }
 
 func EmptyLoginData() interface{} {
-	return &LoginData{}
+	return &DataBody{}
 }

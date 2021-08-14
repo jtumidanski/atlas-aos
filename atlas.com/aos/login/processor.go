@@ -1,8 +1,8 @@
-package processors
+package login
 
 import (
 	account2 "atlas-aos/account"
-	"atlas-aos/registries"
+	"atlas-aos/configuration"
 	"errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -25,7 +25,7 @@ func AttemptLogin(l logrus.FieldLogger, db *gorm.DB, sessionId uint32, name stri
 	var a *account2.Model
 	as := account2.GetByName(db, name)
 	if as == nil || len(as) == 0 {
-		c, err := registries.GetConfiguration()
+		c, err := configuration.Get()
 		if err != nil {
 			l.WithError(err).Errorf("Error reading needed configuration.")
 			return errors.New("SYSTEM_ERROR")

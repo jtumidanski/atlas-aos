@@ -2,7 +2,6 @@ package login
 
 import (
 	"atlas-aos/json"
-	"atlas-aos/processors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"net/http"
@@ -27,7 +26,7 @@ type ErrorData struct {
 
 func CreateLogin(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		li := &LoginInputContainer{}
+		li := &InputDataContainer{}
 		err := json.FromJSON(li, r.Body)
 		if err != nil {
 			l.WithError(err).Errorln("Deserializing instruction", err)
@@ -40,7 +39,7 @@ func CreateLogin(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *h
 		}
 
 		att := li.Data.Attributes
-		err = processors.AttemptLogin(l, db, att.SessionId, att.Name, att.Password)
+		err = AttemptLogin(l, db, att.SessionId, att.Name, att.Password)
 		if err != nil {
 			l.WithError(err).Warnf("Login attempt by %s failed. error = %s", att.Name, err.Error())
 			rw.WriteHeader(http.StatusForbidden)

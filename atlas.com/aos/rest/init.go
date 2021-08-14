@@ -2,7 +2,7 @@ package rest
 
 import (
 	"atlas-aos/account"
-	"atlas-aos/rest/login"
+	"atlas-aos/login"
 	"context"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
