@@ -5,13 +5,18 @@ import (
 	"atlas-aos/database"
 	"atlas-aos/kafka/consumers"
 	"atlas-aos/logger"
+	"atlas-aos/login"
 	"atlas-aos/rest"
+	"atlas-aos/tracing"
 	"context"
+	"io"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 )
+
+const serviceName = "atlas-aos"
 
 func main() {
 	l := logger.CreateLogger()
@@ -20,11 +25,22 @@ func main() {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 
+	tc, err := tracing.InitTracer(l)(serviceName)
+	if err != nil {
+		l.WithError(err).Fatal("Unable to initialize tracer.")
+	}
+	defer func(tc io.Closer) {
+		err := tc.Close()
+		if err != nil {
+			l.WithError(err).Errorf("Unable to close tracer.")
+		}
+	}(tc)
+
 	db := database.Connect(l, database.SetMigrations(account.Migration))
 
 	consumers.CreateEventConsumers(l, db, ctx, wg)
 
-	rest.CreateRestService(l, db, ctx, wg)
+	rest.CreateService(l, db, ctx, wg, "/ms/aos", login.InitResource, account.InitResource)
 
 	// trap sigterm or interrupt and gracefully shutdown the server
 	c := make(chan os.Signal, 1)

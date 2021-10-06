@@ -3,6 +3,7 @@ package consumers
 import (
 	"atlas-aos/kafka/handler"
 	"atlas-aos/login"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -22,7 +23,7 @@ func CharacterStatusEventCreator() handler.EmptyEventCreator {
 }
 
 func HandleCharacterStatusEvent(db *gorm.DB) handler.EventHandler {
-	return func(l logrus.FieldLogger, e interface{}) {
+	return func(l logrus.FieldLogger, span opentracing.Span, e interface{}) {
 		if event, ok := e.(*characterStatusEvent); ok {
 			if event.Type == "LOGIN" {
 				err := login.SetLoggedIn(db, event.AccountId)
@@ -38,7 +39,7 @@ func HandleCharacterStatusEvent(db *gorm.DB) handler.EventHandler {
 				l.Warnf("Received a unhandled character status type of %s.", event.Type)
 			}
 		} else {
-			l.Errorf("Unable to cast event provided to handler [HandleCharacterStatusEvent]")
+			l.Errorf("Unable to cast event provided.")
 		}
 	}
 }

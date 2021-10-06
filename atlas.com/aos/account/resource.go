@@ -9,6 +9,12 @@ import (
 	"strconv"
 )
 
+func InitResource(router *mux.Router, l logrus.FieldLogger, db *gorm.DB) {
+	r := router.PathPrefix("/accounts").Subrouter()
+	r.HandleFunc("/", GetAccountByName(l, db)).Queries("name", "{name}").Methods(http.MethodGet)
+	r.HandleFunc("/{accountId}", GetAccountById(l, db)).Methods(http.MethodGet)
+}
+
 func GetAccountByName(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		name := getAccountName(r)

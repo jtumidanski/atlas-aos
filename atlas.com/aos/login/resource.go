@@ -2,6 +2,7 @@ package login
 
 import (
 	"atlas-aos/json"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"net/http"
@@ -22,6 +23,11 @@ type ErrorData struct {
 	Title  string            `json:"title"`
 	Detail string            `json:"detail"`
 	Meta   map[string]string `json:"meta"`
+}
+
+func InitResource(router *mux.Router, l logrus.FieldLogger, db *gorm.DB) {
+	r := router.PathPrefix("/logins").Subrouter()
+	r.HandleFunc("/", CreateLogin(l, db)).Methods(http.MethodPost)
 }
 
 func CreateLogin(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {

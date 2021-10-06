@@ -3,6 +3,7 @@ package requests
 import (
 	"atlas-aos/json"
 	"atlas-aos/retry"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -23,7 +24,7 @@ func SetRetries(amount int) Configurator {
 	}
 }
 
-func Get(l logrus.FieldLogger) func(url string, resp interface{}, configurators ...Configurator) error {
+func Get(l logrus.FieldLogger, span opentracing.Span) func(url string, resp interface{}, configurators ...Configurator) error {
 	return func(url string, resp interface{}, configurators ...Configurator) error {
 		c := &configuration{retries: 1}
 		for _, configurator := range configurators {
@@ -33,7 +34,21 @@ func Get(l logrus.FieldLogger) func(url string, resp interface{}, configurators 
 		var r *http.Response
 		get := func(attempt int) (bool, error) {
 			var err error
-			r, err = http.Get(url)
+
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			if err != nil {
+				l.WithError(err).Errorf("Error creating request.")
+				return true, err
+			}
+			req.Header.Set("Content-Type", "application/json; charset=utf-8")
+			err = opentracing.GlobalTracer().Inject(
+				span.Context(),
+				opentracing.HTTPHeaders,
+				opentracing.HTTPHeadersCarrier(req.Header))
+			if err != nil {
+				l.WithError(err).Errorf("Unable to decorate request headers with OpenTracing information.")
+			}
+			r, err = http.DefaultClient.Do(req)
 			if err != nil {
 				l.Warnf("Failed calling GET on %s, will retry.", url)
 				return true, err
@@ -45,12 +60,12 @@ func Get(l logrus.FieldLogger) func(url string, resp interface{}, configurators 
 			l.WithError(err).Errorf("Unable to successfully call GET on %s.", url)
 			return err
 		}
-		err = processResponse(r, resp)
+		err = ProcessResponse(r, resp)
 		return err
 	}
 }
 
-func processResponse(r *http.Response, rb interface{}) error {
+func ProcessResponse(r *http.Response, rb interface{}) error {
 	err := json.FromJSON(rb, r.Body)
 	if err != nil {
 		return err
