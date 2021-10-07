@@ -13,10 +13,10 @@ const (
 )
 
 func CreateEventConsumers(l *logrus.Logger, db *gorm.DB, ctx context.Context, wg *sync.WaitGroup) {
-	cec := func(topicToken string, emptyEventCreator handler.EmptyEventCreator, processor handler.EventHandler) {
-		createEventConsumer(l, ctx, wg, CharacterStatus, topicToken, emptyEventCreator, processor)
+	cec := func(topicToken string, name string, emptyEventCreator handler.EmptyEventCreator, processor handler.EventHandler) {
+		createEventConsumer(l, ctx, wg, name, topicToken, emptyEventCreator, processor)
 	}
-	cec("TOPIC_CHARACTER_STATUS", CharacterStatusEventCreator(), HandleCharacterStatusEvent(db))
+	cec("TOPIC_CHARACTER_STATUS", CharacterStatus, CharacterStatusEventCreator(), HandleCharacterStatusEvent(db))
 
 }
 
