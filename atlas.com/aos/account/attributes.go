@@ -1,20 +1,16 @@
 package account
 
-type DataContainer struct {
-	Data DataBody `json:"data"`
+type dataContainer struct {
+	Data dataBody `json:"data"`
 }
 
-type DataListContainer struct {
-	Data []DataBody `json:"data"`
-}
-
-type DataBody struct {
+type dataBody struct {
 	Id         string     `json:"id"`
 	Type       string     `json:"type"`
-	Attributes Attributes `json:"attributes"`
+	Attributes attributes `json:"attributes"`
 }
 
-type Attributes struct {
+type attributes struct {
 	Name           string `json:"name"`
 	Password       string `json:"password"`
 	Pin            string `json:"pin"`

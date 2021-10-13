@@ -2,110 +2,148 @@ package account
 
 import (
 	"atlas-aos/json"
+	"atlas-aos/rest"
 	"github.com/gorilla/mux"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 )
 
+const (
+	getAccountByName = "get_account_by_name"
+	getAccountById   = "get_account"
+)
+
 func InitResource(router *mux.Router, l logrus.FieldLogger, db *gorm.DB) {
 	r := router.PathPrefix("/accounts").Subrouter()
-	r.HandleFunc("/", GetAccountByName(l, db)).Queries("name", "{name}").Methods(http.MethodGet)
-	r.HandleFunc("/{accountId}", GetAccountById(l, db)).Methods(http.MethodGet)
+	r.HandleFunc("/", registerGetAccountByName(l, db)).Queries("name", "{name}").Methods(http.MethodGet)
+	r.HandleFunc("/{accountId}", registerGetAccountById(l, db)).Methods(http.MethodGet)
 }
 
-func GetAccountByName(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
-	return func(rw http.ResponseWriter, r *http.Request) {
-		name := getAccountName(r)
-		as := GetByName(db, name)
-		if len(as) == 0 {
-			rw.WriteHeader(http.StatusNotFound)
-			return
-		}
+func registerGetAccountByName(l logrus.FieldLogger, db *gorm.DB) http.HandlerFunc {
+	return rest.RetrieveSpan(getAccountByName, func(span opentracing.Span) http.HandlerFunc {
+		return parseName(l, func(name string) http.HandlerFunc {
+			return handleGetAccountByName(l, db)(span)(name)
+		})
+	})
+}
 
-		a := as[0]
+type nameHandler func(name string) http.HandlerFunc
 
-		rw.WriteHeader(http.StatusOK)
-		result := DataContainer{
-			Data: DataBody{
-				Id:   strconv.FormatUint(uint64(a.Id()), 10),
-				Type: "",
-				Attributes: Attributes{
-					Name:           a.Name(),
-					Password:       a.Password(),
-					Pin:            "",
-					Pic:            "",
-					LoggedIn:       a.State(),
-					LastLogin:      0,
-					Gender:         0,
-					Banned:         false,
-					TOS:            false,
-					Language:       "",
-					Country:        "",
-					CharacterSlots: 4,
-				},
-			},
-		}
-
-		err := json.ToJSON(result, rw)
-		if err != nil {
-			l.WithError(err).Errorf("Error writing response.")
+func parseName(l logrus.FieldLogger, next nameHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if val, ok := mux.Vars(r)["name"]; ok {
+			next(val)(w, r)
+		} else {
+			l.Errorf("Missing name parameter.")
+			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
 }
 
-func GetAccountById(l logrus.FieldLogger, db *gorm.DB) func(http.ResponseWriter, *http.Request) {
-	return func(rw http.ResponseWriter, r *http.Request) {
-		id := getAccountId(l)(r)
-		a, err := GetById(db, id)
-		if err != nil {
-			rw.WriteHeader(http.StatusNotFound)
-			return
-		}
+func handleGetAccountByName(l logrus.FieldLogger, db *gorm.DB) func(span opentracing.Span) func(name string) http.HandlerFunc {
+	return func(span opentracing.Span) func(name string) http.HandlerFunc {
+		return func(name string) http.HandlerFunc {
+			return func(rw http.ResponseWriter, r *http.Request) {
+				a, err := GetByName(l, db)(name)
+				if err != nil {
+					rw.WriteHeader(http.StatusNotFound)
+					return
+				}
 
-		rw.WriteHeader(http.StatusOK)
-		result := DataContainer{
-			Data: DataBody{
-				Id:   strconv.FormatUint(uint64(a.Id()), 10),
-				Type: "",
-				Attributes: Attributes{
-					Name:           a.Name(),
-					Password:       a.Password(),
-					Pin:            "",
-					Pic:            "",
-					LoggedIn:       a.State(),
-					LastLogin:      0,
-					Gender:         0,
-					Banned:         false,
-					TOS:            false,
-					Language:       "",
-					Country:        "",
-					CharacterSlots: 4,
-				},
-			},
-		}
+				rw.WriteHeader(http.StatusOK)
+				result := dataContainer{
+					Data: dataBody{
+						Id:   strconv.FormatUint(uint64(a.Id()), 10),
+						Type: "",
+						Attributes: attributes{
+							Name:           a.Name(),
+							Password:       a.Password(),
+							Pin:            "",
+							Pic:            "",
+							LoggedIn:       a.State(),
+							LastLogin:      0,
+							Gender:         0,
+							Banned:         false,
+							TOS:            false,
+							Language:       "",
+							Country:        "",
+							CharacterSlots: 4,
+						},
+					},
+				}
 
-		err = json.ToJSON(result, rw)
-		if err != nil {
-			l.WithError(err).Errorln("Error writing response.")
+				err = json.ToJSON(result, rw)
+				if err != nil {
+					l.WithError(err).Errorf("Error writing response.")
+				}
+			}
 		}
 	}
 }
 
-func getAccountName(r *http.Request) string {
-	vars := mux.Vars(r)
-	return vars["name"]
-}
+type idHandler func(id uint32) http.HandlerFunc
 
-func getAccountId(l logrus.FieldLogger) func(r *http.Request) uint32 {
-	return func(r *http.Request) uint32 {
+func parseId(l logrus.FieldLogger, next idHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		value, err := strconv.Atoi(vars["accountId"])
 		if err != nil {
-			l.WithError(err).Errorln("Error parsing characterId as uint32")
-			return 0
+			l.WithError(err).Errorln("Error parsing id as uint32")
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
-		return uint32(value)
+		next(uint32(value))(w, r)
+	}
+}
+
+func registerGetAccountById(l logrus.FieldLogger, db *gorm.DB) http.HandlerFunc {
+	return rest.RetrieveSpan(getAccountById, func(span opentracing.Span) http.HandlerFunc {
+		return parseId(l, func(id uint32) http.HandlerFunc {
+			return handleGetAccountById(l, db)(span)(id)
+		})
+	})
+}
+
+func handleGetAccountById(l logrus.FieldLogger, db *gorm.DB) func(span opentracing.Span) func(id uint32) http.HandlerFunc {
+	return func(span opentracing.Span) func(id uint32) http.HandlerFunc {
+		return func(id uint32) http.HandlerFunc {
+			return func(rw http.ResponseWriter, r *http.Request) {
+				a, err := GetById(l, db)(id)
+				if err != nil {
+					rw.WriteHeader(http.StatusNotFound)
+					return
+				}
+
+				rw.WriteHeader(http.StatusOK)
+				result := dataContainer{
+					Data: dataBody{
+						Id:   strconv.FormatUint(uint64(a.Id()), 10),
+						Type: "",
+						Attributes: attributes{
+							Name:           a.Name(),
+							Password:       a.Password(),
+							Pin:            "",
+							Pic:            "",
+							LoggedIn:       a.State(),
+							LastLogin:      0,
+							Gender:         0,
+							Banned:         false,
+							TOS:            false,
+							Language:       "",
+							Country:        "",
+							CharacterSlots: 4,
+						},
+					},
+				}
+
+				err = json.ToJSON(result, rw)
+				if err != nil {
+					l.WithError(err).Errorln("Error writing response.")
+				}
+			}
+		}
 	}
 }

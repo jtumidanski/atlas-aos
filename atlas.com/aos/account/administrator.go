@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func CreateAccount(db *gorm.DB, name string, password string) (*Model, error) {
+func createAccount(db *gorm.DB, name string, password string) (*Model, error) {
 	a := &account{
 		Name:      name,
 		Password:  password,
@@ -21,7 +21,7 @@ func CreateAccount(db *gorm.DB, name string, password string) (*Model, error) {
 	return makeAccount(a), nil
 }
 
-func UpdateState(db *gorm.DB, id uint32, state byte) error {
+func updateState(db *gorm.DB, id uint32, state byte) error {
 	a := account{ID: id}
 	err := db.Where(&a).First(&a).Error
 	if err != nil {

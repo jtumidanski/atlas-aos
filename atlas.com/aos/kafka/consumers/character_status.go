@@ -1,8 +1,8 @@
 package consumers
 
 import (
+	"atlas-aos/account"
 	"atlas-aos/kafka/handler"
-	"atlas-aos/login"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -26,12 +26,12 @@ func HandleCharacterStatusEvent(db *gorm.DB) handler.EventHandler {
 	return func(l logrus.FieldLogger, span opentracing.Span, e interface{}) {
 		if event, ok := e.(*characterStatusEvent); ok {
 			if event.Type == "LOGIN" {
-				err := login.SetLoggedIn(db, event.AccountId)
+				err := account.SetLoggedIn(l, db)(event.AccountId)
 				if err != nil {
 					l.WithError(err).Errorf("Setting logged in state for account %d.", event.AccountId)
 				}
 			} else if event.Type == "LOGOUT" {
-				err := login.SetLoggedOut(db, event.AccountId)
+				err := account.SetLoggedOut(l, db)(event.AccountId)
 				if err != nil {
 					l.WithError(err).Errorf("Setting logged out state for account %d.", event.AccountId)
 				}
