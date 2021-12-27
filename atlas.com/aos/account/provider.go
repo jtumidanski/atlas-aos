@@ -1,32 +1,22 @@
 package account
 
 import (
-	"gorm.io/gorm"
+   "atlas-aos/database"
+   "gorm.io/gorm"
 )
 
-func getByName(db *gorm.DB, name string) modelListProvider {
-	return func() ([]*Model, error) {
-		var results []account
-		err := db.Where(&account{Name: name}).First(&results).Error
-		if err != nil {
-			return make([]*Model, 0), nil
-		}
-
-		var accounts []*Model
-		for _, a := range results {
-			accounts = append(accounts, makeAccount(&a))
-		}
-		return accounts, nil
-	}
+func entityById(id uint32) database.EntityProvider[account] {
+   return func(db *gorm.DB) (account, error) {
+      var result account
+      err := db.First(&result, id).Error
+      return result, err
+   }
 }
 
-func getById(db *gorm.DB, id uint32) modelProvider {
-	return func() (*Model, error) {
-		var result account
-		err := db.First(&result, id).Error
-		if err != nil {
-			return nil, err
-		}
-		return makeAccount(&result), nil
-	}
+func entitiesByName(name string) database.EntityListProvider[account] {
+   return func(db *gorm.DB) ([]account, error) {
+      var results []account
+      err := db.Where(&account{Name: name}).First(&results).Error
+      return results, err
+   }
 }
