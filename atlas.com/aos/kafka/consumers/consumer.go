@@ -21,7 +21,7 @@ type config struct {
 
 type ConfigOption func(c *config)
 
-func NewConsumer(cl *logrus.Logger, ctx context.Context, wg *sync.WaitGroup, name string, topicToken string, groupId string, ec handler.EmptyEventCreator, h handler.EventHandler, modifications ...ConfigOption) {
+func NewConsumer[E any](cl *logrus.Logger, ctx context.Context, wg *sync.WaitGroup, name string, topicToken string, groupId string, h handler.EventHandler[E], modifications ...ConfigOption) {
 	c := &config{maxWait: 500 * time.Millisecond}
 
 	for _, modification := range modifications {
@@ -35,6 +35,8 @@ func NewConsumer(cl *logrus.Logger, ctx context.Context, wg *sync.WaitGroup, nam
 	l := cl.WithFields(logrus.Fields{"originator": t, "type": "kafka_consumer"})
 
 	l.Infof("Creating topic consumer.")
+
+	wg.Add(1)
 
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{os.Getenv("BOOTSTRAP_SERVERS")},
@@ -68,7 +70,7 @@ func NewConsumer(cl *logrus.Logger, ctx context.Context, wg *sync.WaitGroup, nam
 				l.WithError(err).Errorf("Could not successfully read message.")
 			} else {
 				l.Infof("Message received %s.", string(msg.Value))
-				event := ec()
+				var event E
 				err = json.Unmarshal(msg.Value, &event)
 				if err != nil {
 					l.WithError(err).Errorf("Could not unmarshal event into %s.", msg.Value)

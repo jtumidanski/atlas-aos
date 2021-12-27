@@ -16,30 +16,20 @@ type characterStatusEvent struct {
 	Type        string `json:"type"`
 }
 
-func CharacterStatusEventCreator() handler.EmptyEventCreator {
-	return func() interface{} {
-		return &characterStatusEvent{}
-	}
-}
-
-func HandleCharacterStatusEvent(db *gorm.DB) handler.EventHandler {
-	return func(l logrus.FieldLogger, span opentracing.Span, e interface{}) {
-		if event, ok := e.(*characterStatusEvent); ok {
-			if event.Type == "LOGIN" {
-				err := account.SetLoggedIn(l, db)(event.AccountId)
-				if err != nil {
-					l.WithError(err).Errorf("Setting logged in state for account %d.", event.AccountId)
-				}
-			} else if event.Type == "LOGOUT" {
-				err := account.SetLoggedOut(l, db)(event.AccountId)
-				if err != nil {
-					l.WithError(err).Errorf("Setting logged out state for account %d.", event.AccountId)
-				}
-			} else {
-				l.Warnf("Received a unhandled character status type of %s.", event.Type)
+func HandleCharacterStatusEvent(db *gorm.DB) handler.EventHandler[characterStatusEvent] {
+	return func(l logrus.FieldLogger, span opentracing.Span, event characterStatusEvent) {
+		if event.Type == "LOGIN" {
+			err := account.SetLoggedIn(l, db)(event.AccountId)
+			if err != nil {
+				l.WithError(err).Errorf("Setting logged in state for account %d.", event.AccountId)
+			}
+		} else if event.Type == "LOGOUT" {
+			err := account.SetLoggedOut(l, db)(event.AccountId)
+			if err != nil {
+				l.WithError(err).Errorf("Setting logged out state for account %d.", event.AccountId)
 			}
 		} else {
-			l.Errorf("Unable to cast event provided.")
+			l.Warnf("Received a unhandled character status type of %s.", event.Type)
 		}
 	}
 }

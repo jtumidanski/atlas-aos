@@ -11,13 +11,17 @@ const (
 )
 
 func Migration(db *gorm.DB) error {
-	return db.AutoMigrate(&account{})
+	return db.AutoMigrate(&entity{})
 }
 
-type account struct {
+type entity struct {
 	ID        uint32 `gorm:"primaryKey;autoIncrement;not null"`
 	Name      string `gorm:"not null"`
 	Password  string `gorm:"not null"`
 	State     byte   `gorm:"not null;default=0"`
 	LastLogin int64
+}
+
+func (e entity) TableName() string {
+	return "accounts"
 }
