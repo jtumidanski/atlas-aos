@@ -9,21 +9,51 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetLoggedIn(_ logrus.FieldLogger, db *gorm.DB) func(accountId uint32) error {
-	return func(accountId uint32) error {
-		return update(db, accountId, UpdateState(StateLoggedIn))
+func SetLoggedIn(db *gorm.DB) domain.IdOperator {
+	return func(id uint32) error {
+		return ForId(db)(id, setLoggedIn(db))
 	}
 }
 
-func SetLoggedOut(_ logrus.FieldLogger, db *gorm.DB) func(accountId uint32) error {
-	return func(accountId uint32) error {
-		return update(db, accountId, UpdateState(StateNotLoggedIn))
+func SetLoggedOut(db *gorm.DB) domain.IdOperator {
+	return func(id uint32) error {
+		return ForId(db)(id, setLoggedOut(db))
+	}
+}
+
+func setLoggedIn(db *gorm.DB) domain.ModelOperator[Model] {
+	return func(m Model) error {
+		return update(db)(updateState(StateLoggedIn))(m.Id())
+	}
+}
+
+func setLoggedOut(db *gorm.DB) domain.ModelOperator[Model] {
+	return func(m Model) error {
+		return update(db)(updateState(StateNotLoggedIn))(m.Id())
+	}
+}
+
+func ForId(db *gorm.DB) func(id uint32, operator domain.ModelOperator[Model]) error {
+	return func(id uint32, operator domain.ModelOperator[Model]) error {
+		return domain.For[Model](byIdProvider(db)(id), operator)
+	}
+}
+
+func byIdProvider(db *gorm.DB) func(id uint32) domain.ModelProvider[Model] {
+	return func(id uint32) domain.ModelProvider[Model] {
+		return database.ModelProvider[Model, entity](db)(entityById(id), modelFromEntity)
+	}
+}
+
+func byNameProvider(db *gorm.DB) func(name string) domain.ModelListProvider[Model] {
+	return func(name string) domain.ModelListProvider[Model] {
+		return database.ModelListProvider[Model, entity](db)(entitiesByName(name), modelFromEntity)
 	}
 }
 
 func GetById(l logrus.FieldLogger, db *gorm.DB) func(id uint32) (*Model, error) {
 	return func(id uint32) (*Model, error) {
-		m, err := database.ModelProvider[Model, entity](db)(entityById(id), makeAccount)()
+		m, err := byIdProvider(db)(id)()
 		if err != nil {
 			l.WithError(err).Errorf("Unable to retrieve account by id %d.", id)
 			return nil, err
@@ -34,7 +64,7 @@ func GetById(l logrus.FieldLogger, db *gorm.DB) func(id uint32) (*Model, error) 
 
 func GetByName(l logrus.FieldLogger, db *gorm.DB) func(name string) (*Model, error) {
 	return func(name string) (*Model, error) {
-		ms, err := database.ModelListProvider[Model, entity](db)(entitiesByName(name), makeAccount)()
+		ms, err := byNameProvider(db)(name)()
 		if err != nil {
 			l.WithError(err).Errorf("Unable to locate account with name %s.", name)
 			return nil, err
@@ -48,14 +78,14 @@ func GetByName(l logrus.FieldLogger, db *gorm.DB) func(name string) (*Model, err
 	}
 }
 
-func GetOrCreate(l logrus.FieldLogger, db *gorm.DB) func(name string, password string, create bool) (*Model, error) {
-	return func(name string, password string, create bool) (*Model, error) {
-		ms, _ := database.ModelListProvider[Model, entity](db)(entitiesByName(name), makeAccount)()
+func GetOrCreate(l logrus.FieldLogger, db *gorm.DB) func(name string, password string, automaticRegister bool) (*Model, error) {
+	return func(name string, password string, automaticRegister bool) (*Model, error) {
+		ms, _ := byNameProvider(db)(name)()
 		if ms != nil && len(ms) != 0 {
 			return &ms[0], nil
 		}
 
-		if !create {
+		if !automaticRegister {
 			l.Errorf("Unable to locate account by name %s, and automatic account creation is not enabled.", name)
 			return nil, errors.New("account not found")
 		}
@@ -67,7 +97,7 @@ func GetOrCreate(l logrus.FieldLogger, db *gorm.DB) func(name string, password s
 			return nil, err
 		}
 
-		m, err := createAccount(db, name, string(hashPass))
+		m, err := create(db)(name, string(hashPass))
 		if err != nil {
 			l.WithError(err).Errorf("Unable to create account %s.", name)
 			return nil, err

@@ -51,7 +51,7 @@ func AttemptLogin(l logrus.FieldLogger, db *gorm.DB) func(sessionId uint32, name
 			return errors.New(IncorrectPassword)
 		}
 
-		err = account.SetLoggedIn(l, db)(a.Id())
+		err = account.SetLoggedIn(db)(a.Id())
 		if err != nil {
 			l.WithError(err).Errorf("Error trying to update logged in state for %s.", name)
 			return errors.New(SystemError)

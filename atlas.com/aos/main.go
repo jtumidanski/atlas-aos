@@ -2,6 +2,7 @@ package main
 
 import (
 	"atlas-aos/account"
+	"atlas-aos/character/status"
 	"atlas-aos/database"
 	"atlas-aos/kafka/consumers"
 	"atlas-aos/logger"
@@ -17,6 +18,7 @@ import (
 )
 
 const serviceName = "atlas-aos"
+const consumerGroupId = "Account Orchestration Service"
 
 func main() {
 	l := logger.CreateLogger(serviceName)
@@ -38,9 +40,12 @@ func main() {
 
 	db := database.Connect(l, database.SetMigrations(account.Migration))
 
-	consumers.CreateEventConsumers(l, db, ctx, wg)
+	consumers.CreateEventConsumers(l, ctx, wg,
+		status.NewConsumer(db)(consumerGroupId))
 
-	rest.CreateService(l, db, ctx, wg, "/ms/aos", login.InitResource, account.InitResource)
+	rest.CreateService(l, db, ctx, wg, "/ms/aos",
+		login.InitResource,
+		account.InitResource)
 
 	// trap sigterm or interrupt and gracefully shutdown the server
 	c := make(chan os.Signal, 1)
