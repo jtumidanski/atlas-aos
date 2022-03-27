@@ -2,8 +2,7 @@ package status
 
 import (
 	"atlas-aos/account"
-	"atlas-aos/kafka/consumers"
-	"atlas-aos/kafka/handler"
+	"atlas-aos/kafka"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -24,13 +23,13 @@ type event struct {
 	Type        string `json:"type"`
 }
 
-func NewConsumer(db *gorm.DB) func(groupId string) consumers.Config[event] {
-	return func(groupId string) consumers.Config[event] {
-		return consumers.NewConfiguration[event](consumerName, topicToken, groupId, HandleEvent(db))
+func NewConsumer(db *gorm.DB) func(groupId string) kafka.ConsumerConfig {
+	return func(groupId string) kafka.ConsumerConfig {
+		return kafka.NewConsumerConfig[event](consumerName, topicToken, groupId, HandleEvent(db))
 	}
 }
 
-func HandleEvent(db *gorm.DB) handler.EventHandler[event] {
+func HandleEvent(db *gorm.DB) kafka.HandlerFunc[event] {
 	return func(l logrus.FieldLogger, span opentracing.Span, event event) {
 		switch event.Type {
 		case typeLogin:

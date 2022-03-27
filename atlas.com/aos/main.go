@@ -4,7 +4,7 @@ import (
 	"atlas-aos/account"
 	"atlas-aos/character/status"
 	"atlas-aos/database"
-	"atlas-aos/kafka/consumers"
+	"atlas-aos/kafka"
 	"atlas-aos/logger"
 	"atlas-aos/login"
 	"atlas-aos/rest"
@@ -40,7 +40,7 @@ func main() {
 
 	db := database.Connect(l, database.SetMigrations(account.Migration))
 
-	consumers.CreateEventConsumers(l, ctx, wg,
+	kafka.CreateConsumers(l, ctx, wg,
 		status.NewConsumer(db)(consumerGroupId))
 
 	rest.CreateService(l, db, ctx, wg, "/ms/aos",
