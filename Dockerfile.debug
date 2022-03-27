@@ -1,6 +1,6 @@
 # Start from a Debian image with the latest version of Go installed
 # and a workspace (GOPATH) configured at /go.
-FROM golang:1.18beta1-alpine3.15 AS build-env
+FROM golang:1.18-alpine3.15 AS build-env
 
 ENV CGO_ENABLED 0
 
