@@ -1,7 +1,6 @@
 package account
 
 import (
-	"atlas-aos/domain"
 	"gorm.io/gorm"
 	"time"
 )
@@ -20,12 +19,12 @@ func create(db *gorm.DB) func(name string, password string) (Model, error) {
 			return Model{}, err
 		}
 
-		return modelFromEntity(*a), nil
+		return modelFromEntity(*a)
 	}
 }
 
-func update(db *gorm.DB) func(modifiers ...EntityUpdateFunction) domain.IdOperator {
-	return func(modifiers ...EntityUpdateFunction) domain.IdOperator {
+func update(db *gorm.DB) func(modifiers ...EntityUpdateFunction) IdOperator {
+	return func(modifiers ...EntityUpdateFunction) IdOperator {
 		return func(id uint32) error {
 			e := &entity{}
 			var columns []string
@@ -51,11 +50,11 @@ func updateState(state byte) EntityUpdateFunction {
 	}
 }
 
-func modelFromEntity(a entity) Model {
+func modelFromEntity(a entity) (Model, error) {
 	r := Builder(a.ID).
 		SetName(a.Name).
 		SetPassword(a.Password).
 		SetState(a.State).
 		Build()
-	return r
+	return r, nil
 }
