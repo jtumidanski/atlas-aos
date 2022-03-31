@@ -53,7 +53,7 @@ func byIdProvider(db *gorm.DB) func(id uint32) model.Provider[Model] {
 
 func byNameProvider(db *gorm.DB) func(name string) model.SliceProvider[Model] {
 	return func(name string) model.SliceProvider[Model] {
-		return database.ModelListProvider[Model, entity](db)(entitiesByName(name), modelFromEntity)
+		return database.ModelSliceProvider[Model, entity](db)(entitiesByName(name), modelFromEntity)
 	}
 }
 

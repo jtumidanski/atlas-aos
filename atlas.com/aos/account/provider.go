@@ -17,7 +17,7 @@ func entityById(id uint32) database.EntityProvider[entity] {
 	}
 }
 
-func entitiesByName(name string) database.EntityListProvider[entity] {
+func entitiesByName(name string) database.EntitySliceProvider[entity] {
 	return func(db *gorm.DB) model.SliceProvider[entity] {
 		var results []entity
 		err := db.Where(&entity{Name: name}).First(&results).Error
