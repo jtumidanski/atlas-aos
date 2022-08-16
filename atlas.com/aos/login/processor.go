@@ -4,6 +4,7 @@ import (
 	"atlas-aos/account"
 	"atlas-aos/configuration"
 	"errors"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -17,7 +18,7 @@ const (
 	IncorrectPassword = "INCORRECT_PASSWORD"
 )
 
-func AttemptLogin(l logrus.FieldLogger, db *gorm.DB) func(sessionId uint32, name string, password string) error {
+func AttemptLogin(l logrus.FieldLogger, db *gorm.DB, span opentracing.Span) func(sessionId uint32, name string, password string) error {
 	return func(sessionId uint32, name string, password string) error {
 		if checkLoginAttempts(sessionId) > 4 {
 			return errors.New("TOO_MANY_ATTEMPTS")
@@ -29,7 +30,7 @@ func AttemptLogin(l logrus.FieldLogger, db *gorm.DB) func(sessionId uint32, name
 			return errors.New(SystemError)
 		}
 
-		a, err := account.GetOrCreate(l, db)(name, password, c.AutomaticRegister)
+		a, err := account.GetOrCreate(l, db, span)(name, password, c.AutomaticRegister)
 		if err != nil && !c.AutomaticRegister {
 			return errors.New(NotRegistered)
 		}
