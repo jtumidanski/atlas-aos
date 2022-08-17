@@ -4,6 +4,7 @@ import (
 	"atlas-aos/database"
 	"atlas-aos/model"
 	"errors"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -79,7 +80,7 @@ func GetByName(l logrus.FieldLogger, db *gorm.DB) func(name string) (Model, erro
 	}
 }
 
-func GetOrCreate(l logrus.FieldLogger, db *gorm.DB) func(name string, password string, automaticRegister bool) (Model, error) {
+func GetOrCreate(l logrus.FieldLogger, db *gorm.DB, span opentracing.Span) func(name string, password string, automaticRegister bool) (Model, error) {
 	return func(name string, password string, automaticRegister bool) (Model, error) {
 		m, err := model.First[Model](byNameProvider(db)(name))
 		if err == nil {
@@ -91,6 +92,12 @@ func GetOrCreate(l logrus.FieldLogger, db *gorm.DB) func(name string, password s
 			return Model{}, errors.New("account not found")
 		}
 
+		return Create(l, db, span)(name, password)
+	}
+}
+
+func Create(l logrus.FieldLogger, db *gorm.DB, span opentracing.Span) func(name string, password string) (Model, error) {
+	return func(name string, password string) (Model, error) {
 		l.Debugf("Attempting to create account %s, with password %s.", name, password)
 		hashPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
@@ -98,11 +105,12 @@ func GetOrCreate(l logrus.FieldLogger, db *gorm.DB) func(name string, password s
 			return Model{}, err
 		}
 
-		m, err = create(db)(name, string(hashPass))
+		m, err := create(db)(name, string(hashPass))
 		if err != nil {
 			l.WithError(err).Errorf("Unable to create account %s.", name)
 			return Model{}, err
 		}
+		emitCreatedEvent(l, span)(m.Id(), name)
 		return m, nil
 	}
 }

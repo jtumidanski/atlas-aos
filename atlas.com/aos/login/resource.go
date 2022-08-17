@@ -64,7 +64,7 @@ func handleCreateLogin(l logrus.FieldLogger, db *gorm.DB) func(span opentracing.
 		return func(container *inputDataContainer) http.HandlerFunc {
 			return func(rw http.ResponseWriter, r *http.Request) {
 				att := container.Data.Attributes
-				err := AttemptLogin(l, db)(att.SessionId, att.Name, att.Password)
+				err := AttemptLogin(l, db, span)(att.SessionId, att.Name, att.Password)
 				if err != nil {
 					l.WithError(err).Warnf("Login attempt by %s failed. error = %s", att.Name, err.Error())
 					rw.WriteHeader(http.StatusForbidden)
